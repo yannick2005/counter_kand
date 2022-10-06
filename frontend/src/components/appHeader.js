@@ -8,7 +8,6 @@ import {
   Typography,
   withStyles,
 } from '@material-ui/core';
-import AvTimerIcon from '@material-ui/icons/AvTimer';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import Help from './help'
 
@@ -60,8 +59,7 @@ class AppHeader extends Component {
       <AppBar position="static">
         <Toolbar className={classes.toolBar}>
           <Button color="inherit" component={Link} to="/">
-            <img className={classes.image} src={`${window.location.origin}/images/fvv-header.png`} alt="FVV header" />
-            <AvTimerIcon />
+            <img className={classes.image} src={`${window.location.origin}/images/header.png`} alt="Header" />
             <Typography variant="h6" color="inherit">
               Counter
             </Typography>

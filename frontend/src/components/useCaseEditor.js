@@ -42,7 +42,8 @@ const styles = theme => ({
     marginTop: theme.spacing(2),
   },
   formGroup: {
-    border: 'solid', 
+    border: 'solid',
+    borderWidth: '1px',
     padding: theme.spacing(1)
   },
   inputField: {
@@ -59,7 +60,7 @@ class UseCaseditor extends Component {
       name: "",
       pinCode: "",
       measurementOptions: [
-        { id: 0, name: "", options: [ { name: "", icon: ""}]}
+        { id: 0, name: "", options: [{ name: "", icon: "" }] }
       ]
     };
 
@@ -70,20 +71,20 @@ class UseCaseditor extends Component {
   componentDidMount() {
     const { useCase } = this.props
 
-    if(useCase) {
+    if (useCase) {
       // only change state of usecase passed
       this.setState({
-        id: useCase.id, 
-        name: useCase.name, 
+        id: useCase.id,
+        name: useCase.name,
         measurementOptions: useCase.measurementOptions
       })
     }
   }
 
   // called by child MeasurementOptions when change of input
-  handleOptionChange = function(groupIndex, options) {
+  handleOptionChange = function (groupIndex, options) {
     let tmpOptions = this.state.measurementOptions
-    
+
     tmpOptions[groupIndex].options = options
     this.setState({
       measurementOptions: tmpOptions
@@ -101,7 +102,7 @@ class UseCaseditor extends Component {
     onSave(id, name, pinCode, measurementOptions)
   };
 
-  handleOptionGroupName = function(index, event) {
+  handleOptionGroupName = function (index, event) {
     let measurementOptions = this.state.measurementOptions
 
     measurementOptions[index].name = event.target.value
@@ -124,19 +125,19 @@ class UseCaseditor extends Component {
     let idx = this.state.measurementOptions.length
 
     this.setState({
-      measurementOptions: this.state.measurementOptions.concat([{ id: idx, name: "", options: [ { name: ""}] }])
+      measurementOptions: this.state.measurementOptions.concat([{ id: idx, name: "", options: [{ name: "" }] }])
     });
   };
 
   handleRemoveOptionGroup = idx => () => {
-      this.setState({
-        measurementOptions: this.state.measurementOptions.filter((s, sidx) => idx !== sidx)
-      });
+    this.setState({
+      measurementOptions: this.state.measurementOptions.filter((s, sidx) => idx !== sidx)
+    });
   };
 
   handleCopyOptionGroup = idx => () => {
     let measurementOptions = this.state.measurementOptions
-    let newMeasurementOption = {...measurementOptions[idx]}
+    let newMeasurementOption = { ...measurementOptions[idx] }
     newMeasurementOption.id = this.state.measurementOptions.length
 
     measurementOptions.insert(idx, newMeasurementOption)
@@ -147,7 +148,7 @@ class UseCaseditor extends Component {
   }
 
   render() {
-    const { classes, history, errorMessage} = this.props;
+    const { classes, history, errorMessage } = this.props;
     var that = this
 
     return (
@@ -160,7 +161,7 @@ class UseCaseditor extends Component {
           <form onSubmit={this.handleSubmit}>
             <CardContent className={classes.modalCardContent}>
               <TextField
-                required 
+                required
                 type="text"
                 name="name"
                 key="inputUseCase"
@@ -170,34 +171,34 @@ class UseCaseditor extends Component {
                 onChange={this.handleChange}
                 variant="outlined"
                 size="small"
-                autoFocus 
+                autoFocus
               />
 
-            <TextField
-                required 
+              <TextField
+                required
                 type="text"
                 key="inputUseCasePinCode"
                 name="pinCode"
                 placeholder="Use Case Pin Code"
                 label="Use Case Pin Code"
-                className={ classes.inputField }
-                value={ this.state.pinCode }
-                onChange={ this.handleChange }
-                error={ errorMessage }
+                className={classes.inputField}
+                value={this.state.pinCode}
+                onChange={this.handleChange}
+                error={errorMessage}
                 variant="outlined"
                 size="small"
               />
 
               <Typography variant="subtitle1" >Measurement Options</Typography>
 
-              {this.state.measurementOptions.map(function(element, index) { 
-                
+              {this.state.measurementOptions.map(function (element, index) {
+
                 return (
-                  <FormGroup key={`formgroup-${ index }`} className={classes.formGroup}>
-                     <TextField
-                      required 
+                  <FormGroup key={`formgroup-${index}`} className={classes.formGroup}>
+                    <TextField
+                      required
                       type="text"
-                      key={`input-optionGroup-${ index }`}
+                      key={`input-optionGroup-${index}`}
                       placeholder="Option group name"
                       label="Option group name"
                       value={element.name}
@@ -207,28 +208,28 @@ class UseCaseditor extends Component {
                     />
 
                     <div>
-                      <MeasurementOptions 
-                        id={index} 
-                        name={element.name} 
-                        options={element.options} 
+                      <MeasurementOptions
+                        id={index}
+                        name={element.name}
+                        options={element.options}
                         handleOptionChange={that.handleOptionChange}
                       />
-                      <Button 
-                        size="small" 
-                        color="primary" 
-                        className={classes.button} 
+                      <Button
+                        size="small"
+                        color="primary"
+                        className={classes.button}
                         onClick={that.handleRemoveOptionGroup(index)}
                       >
-                        <DeleteIcon/>Remove Option Group
+                        <DeleteIcon />Remove Option Group
                       </Button>
 
-                      <Button 
-                        size="small" 
-                        color="primary" 
-                        className={classes.button} 
+                      <Button
+                        size="small"
+                        color="primary"
+                        className={classes.button}
                         onClick={that.handleCopyOptionGroup(index)}
                       >
-                        <FileCopyIcon/>Copy Option Group
+                        <FileCopyIcon />Copy Option Group
                       </Button>
                     </div>
                   </FormGroup>
@@ -236,13 +237,13 @@ class UseCaseditor extends Component {
               })}
             </CardContent>
             <CardActions>
-              <Button size="small" color="primary" type="submit"><SaveAltIcon/>Save</Button>
-              <Button size="small" color="primary" onClick={this.handleAddOptionGroup}><AddIcon/>Add Option Group</Button>
-              <Button size="small" onClick={() => history.goBack()}><ClearIcon/>Cancel</Button>
+              <Button size="small" color="primary" type="submit"><SaveAltIcon />Save</Button>
+              <Button size="small" color="primary" onClick={this.handleAddOptionGroup}><AddIcon />Add Option Group</Button>
+              <Button size="small" onClick={() => history.goBack()}><ClearIcon />Cancel</Button>
             </CardActions>
           </form>
         </Card>
-    </Modal>
+      </Modal>
     );
   }
 }

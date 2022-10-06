@@ -21,8 +21,6 @@ const styles = theme => ({
   modalCard: {
     width: '90%',
     maxWidth: 600,
-    height: '85%',
-    overflowY: 'scroll',
   },
   modalCardContent: {
     display: 'flex',
@@ -91,7 +89,7 @@ class Help extends Component {
                 <Typography>App version: {APP_VERSION}</Typography>
 
                 <Typography variant="h6" className={classes.header}>Disclaimer</Typography>
-                <Typography>This counter tool is provided as is, and no support will be given. Querying a large amount of data within a very short time, for example by automated means, is prohibited. Technische Universität Wien (TU Wien hereafter) retains the right to block the use of this counter tool if such a high-intensity request is detected. TU Wien, the developers and any other person assume no responsibility for the accuracy of the data. In no event shall TU Wien, the developers and any other person be liable to any person for any damage or loss that may arise from the use of this couter tool. Please be aware that the use of this counter tool will be deemed as agreeing to the terms of these conditions.</Typography>
+                <Typography>This counter tool is provided as is, and no support will be given. Querying a large amount of data within a very short time, for example by automated means, is prohibited. The developers and any other person be liable to any person for any damage or loss that may arise from the use of this couter tool. Please be aware that the use of this counter tool will be deemed as agreeing to the terms of these conditions.</Typography>
               </CardContent>
               <CardActions>
                 <Button size="small" onClick={this.handleChange}><ClearIcon />Close</Button>

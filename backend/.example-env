@@ -5,7 +5,7 @@ NODE_ENV=development
 
 # Database Information
 DB_HOST=localhost
-DB_NAME=counter-database
+DB_NAME=database
 DB_USER=postgres
 DB_PASSWORD=password
 

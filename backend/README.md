@@ -7,7 +7,7 @@ NODE_ENV=development
 
 # Database Information
 DB_HOST=localhost
-DB_NAME=counter-database
+DB_NAME=database
 DB_USER=postgres
 DB_PASSWORD=password
 
@@ -29,9 +29,9 @@ npx sequelize-cli db:create
 npx sequelize-cli db:migrate
 ```
 
-## Run the app 
+## Run the app
 
-### Run the development environment 
+### Run the development environment
 
 `npm run dev`
 
@@ -42,7 +42,7 @@ Open [http://localhost:3100](http://localhost:3100) to view the frontend in the 
 
 The page will reload if you make edits. You will also see any lint errors in the console.
 
-### Run the production environment 
+### Run the production environment
 
 `npm start`
 

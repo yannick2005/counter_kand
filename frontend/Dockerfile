@@ -1,4 +1,4 @@
-FROM node:17.5.0-alpine3.14
+FROM node:18.3.0-alpine3.14
 
 ARG UID=1001
 ARG REACT_APP_BACKEND_URL=''

@@ -1,5 +1,4 @@
-import React, { Component } from 'react';
-import { compose } from 'recompose';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AppBar,
@@ -35,57 +34,43 @@ const styles = theme => ({
   }
 })
 
-class AppHeader extends Component {
-  constructor() {
-    super()
+function AppHeader(props) {
+  const { classes } = props
+  const [showHelp, setShowHelp] = useState(false)
 
-    this.state = {
-      showHelp: false
-    }
-
-    this.handleChange = this.handleChange.bind(this)
+  const handleChange = () => {
+    setShowHelp(!showHelp)
   }
 
-  handleChange() {
-    this.setState({
-      showHelp: !this.state.showHelp
-    })
-  }
 
-  render() {
-    const { classes } = this.props
+  return (
+    <AppBar position="static">
+      <Toolbar className={classes.toolBar}>
+        <Button color="inherit" component={Link} to="/">
+          <img className={classes.image} src={`${window.location.origin}/images/header.png`} alt="Header" />
+          <Typography variant="h6" color="inherit">
+            Counter
+          </Typography>
+        </Button>
 
-    return (
-      <AppBar position="static">
-        <Toolbar className={classes.toolBar}>
-          <Button color="inherit" component={Link} to="/">
-            <img className={classes.image} src={`${window.location.origin}/images/header.png`} alt="Header" />
-            <Typography variant="h6" color="inherit">
-              Counter
-            </Typography>
-          </Button>
-
-          <Button
-            onClick={this.handleChange}
-            className={classes.headerButton}
-          >
-            <HelpOutlineIcon
-              color="secondary"
-              aria-label="add"
-              className={classes.helpIcon}
-            />
-          </Button>
-
-          <Help
-            handleChange={this.handleChange}
-            showModal={this.state.showHelp}
+        <Button
+          onClick={handleChange}
+          className={classes.headerButton}
+        >
+          <HelpOutlineIcon
+            color="secondary"
+            aria-label="add"
+            className={classes.helpIcon}
           />
-        </Toolbar>
-      </AppBar>
-    )
-  }
+        </Button>
+
+        <Help
+          handleChange={handleChange}
+          showModal={showHelp}
+        />
+      </Toolbar>
+    </AppBar>
+  )
 }
 
-export default compose(
-  withStyles(styles),
-)(AppHeader);
+export default withStyles(styles)(AppHeader);

@@ -1,5 +1,4 @@
-import React, { Component } from 'react';
-import { compose } from 'recompose';
+import React, { useState } from 'react';
 import {
   withStyles,
   Button,
@@ -18,52 +17,34 @@ const styles = theme => ({
   }),
 });
 
-class MeasurementButton extends Component {
-  constructor() {
-    super();
-    this.state = {
-      groupName: '',
-      buttonValue: '',
-      icon: '',
-    }
+function MeasurementButton(props) {
+  const { classes, displayText } = props;
+  const [groupName, setGroupName] = useState(props.groupName);
+  const [buttonValue, setButtonValue] = useState(props.buttonValue);
+  const [icon, setIcon] = useState(props.icon);
+
+  const handleButtonPress = () => {
+    const { onClick } = props
+    onClick(groupName, buttonValue)
   }
 
-  componentDidMount() {
-    this.setState({
-      groupName: this.props.groupName,
-      buttonValue: this.props.buttonValue.name,
-      icon: this.props.buttonValue.icon,
-    })
-  }
+  return (
+    <Button variant="outlined"
+      color="primary"
+      className={classes.button}
+      onClick={handleButtonPress}
+    >
+      { /* display text only if user wants that */}
+      {displayText && (
+        buttonValue
+      )}
+      <br />
 
-  handleButtonPress = () => {
-    const { onClick } = this.props
-    onClick(this.state.groupName, this.state.buttonValue)
-  }
+      {icon && (
+        <Icon>{icon}</Icon>
+      )}
+    </Button>
+  )
+}
 
-  render() {
-    const { classes, displayText } = this.props
-
-    return (
-      <Button variant="outlined"
-        color="primary"
-        className={classes.button}
-        onClick={this.handleButtonPress}
-      >
-        { /* display text only if user wants that */}
-        {displayText && (
-          this.state.buttonValue
-        )}
-        <br />
-
-        {this.state.icon && (
-          <Icon>{this.state.icon}</Icon>
-        )}
-      </Button>
-    )
-  }
-};
-
-export default compose(
-  withStyles(styles),
-)(MeasurementButton);
+export default withStyles(styles)(MeasurementButton);

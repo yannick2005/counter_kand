@@ -3,8 +3,6 @@ import {
   withStyles,
   CircularProgress
 } from '@material-ui/core';
-import { compose } from 'recompose';
-import { withRouter } from 'react-router-dom';
 
 const styles = theme => ({
   loadingBar: {
@@ -21,7 +19,4 @@ const LoadingBar = ({ classes }) => (
   </div>
 );
 
-export default compose(
-  withRouter,
-  withStyles(styles),
-)(LoadingBar);
+export default withStyles(styles)(LoadingBar);

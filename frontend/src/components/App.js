@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import { Route } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import {
   CssBaseline,
   withStyles,
@@ -24,13 +24,15 @@ const App = ({ classes }) => (
     <CssBaseline />
     <AppHeader />
     <main className={classes.main}>
-      <Route exact path="/" component={UseCaseManager} />
-      <Route exact path="/useCases" component={UseCaseManager} />
-      <Route exact path="/useCases/:id/measurements" component={UseCaseMeasurement} />
-      <Route exact path="/useCases/:id" component={UseCaseManager} />
-      <Route exact path="/useCases/:id/edit" component={UseCaseManager} />
-      <Route exact path="/useCases/:id/copy" component={UseCaseManager} />
-      <Route exact path="/useCases/:id/measurements/view" component={MeasurementView} />
+      <Routes>
+        <Route exact path="/" component={UseCaseManager} />
+        <Route exact path="/useCases" component={UseCaseManager} />
+        <Route exact path="/useCases/:id/measurements" component={UseCaseMeasurement} />
+        <Route exact path="/useCases/:id" component={UseCaseManager} />
+        <Route exact path="/useCases/:id/edit" component={UseCaseManager} />
+        <Route exact path="/useCases/:id/copy" component={UseCaseManager} />
+        <Route exact path="/useCases/:id/measurements/view" component={MeasurementView} />
+      </Routes>
     </main>
   </Fragment>
 );

@@ -1,10 +1,9 @@
-import React, { Component, Fragment } from 'react';
+import React, { Fragment } from 'react';
 import {
   withStyles,
   Fab,
 } from '@material-ui/core';
-import { withRouter, Link } from 'react-router-dom';
-import { compose } from 'recompose';
+import { Link } from 'react-router-dom';
 
 import ListIcon from '@material-ui/icons/List';
 import ShareIcon from '@material-ui/icons/Share';
@@ -74,82 +73,69 @@ const styles = theme => ({
   },
 })
 
-class ActionItems extends Component {
-  constructor() {
-    super();
+function ActionItems(props) {
+  const { classes, toggleFullscreen, toogleIconView, shareLink, deleteLastMeasurement, measurementsCount, useCaseId } = props;
+  const to = "/useCases/" + useCaseId + "/measurements/view"
 
-    this.state = {
+  return (
+    <Fragment>
+      <Fab
+        color="secondary"
+        aria-label="export"
+        className={classes.fabFullScreen}
+        onClick={toggleFullscreen}
+      >
+        <FullscreenIcon />
+      </Fab>
 
-    }
-  }
+      <Fab
+        color="secondary"
+        aria-label="export"
+        className={classes.fabToogle}
+        onClick={toogleIconView}
+      >
+        <TouchAppIcon />
+      </Fab>
 
-  render() {
-    const { classes, toggleFullscreen, toogleIconView, shareLink, deleteLastMeasurement, measurementsCount, useCaseId } = this.props;
-    const to = "/useCases/" + useCaseId + "/measurements/view"
+      <Fab
+        color="secondary"
+        aria-label="export"
+        className={classes.fabShare}
+        onClick={shareLink}
+      >
+        <ShareIcon />
+      </Fab>
 
-    return (
-      <Fragment>
-        <Fab
-          color="secondary"
-          aria-label="export"
-          className={classes.fabFullScreen}
-          onClick={toggleFullscreen}
-        >
-          <FullscreenIcon />
-        </Fab>
+      <Fab
+        color="secondary"
+        aria-label="export"
+        className={classes.fabDelete}
+        onClick={deleteLastMeasurement}
+      >
+        <UndoIcon />
+      </Fab>
 
-        <Fab
-          color="secondary"
-          aria-label="export"
-          className={classes.fabToogle}
-          onClick={toogleIconView}
-        >
-          <TouchAppIcon />
-        </Fab>
+      <Fab
+        color="secondary"
+        aria-label="edit"
+        disabled={true}
+        className={classes.fabCount}
+        classes={{ disabled: classes.disabled }}
+      >
+        {measurementsCount}
+      </Fab>
 
-        <Fab
-          color="secondary"
-          aria-label="export"
-          className={classes.fabShare}
-          onClick={shareLink}
-        >
-          <ShareIcon />
-        </Fab>
-
-        <Fab
-          color="secondary"
-          aria-label="export"
-          className={classes.fabDelete}
-          onClick={deleteLastMeasurement}
-        >
-          <UndoIcon />
-        </Fab>
-
-        <Fab
-          color="secondary"
-          aria-label="edit"
-          disabled={true}
-          className={classes.fabCount}
-          classes={{ disabled: classes.disabled }}
-        >
-          {measurementsCount}
-        </Fab>
-
-        <Fab
-          color="secondary"
-          aria-label="export"
-          className={classes.fabList}
-          component={Link}
-          to={to}
-        >
-          <ListIcon />
-        </Fab>
-      </Fragment>
-    )
-  }
+      <Fab
+        color="secondary"
+        aria-label="export"
+        className={classes.fabList}
+        component={Link}
+        to={to}
+      >
+        <ListIcon />
+      </Fab>
+    </Fragment>
+  )
 }
 
-export default compose(
-  withRouter,
-  withStyles(styles),
-)(ActionItems);
+export default withStyles(styles)(ActionItems);

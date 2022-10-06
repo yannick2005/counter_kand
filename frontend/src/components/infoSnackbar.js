@@ -6,8 +6,6 @@ import {
   IconButton,
 } from '@material-ui/core';
 import { Check as CheckIcon, Close as CloseIcon } from '@material-ui/icons';
-import { compose, withState } from 'recompose';
-import { v4 as uuidv4 } from 'uuid';
 
 const styles = theme => ({
   snackbarContent: {
@@ -51,7 +49,4 @@ const InfoSnackbar = ({ id, message, onClose, classes }) => (
   </Snackbar>
 );
 
-export default compose(
-  withState('id', 'setId', uuidv4),
-  withStyles(styles),
-)(InfoSnackbar);
+export default withStyles(styles)(InfoSnackbar);

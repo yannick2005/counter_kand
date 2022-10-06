@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import {
   TextField,
   withStyles,
@@ -10,8 +10,6 @@ import {
 import AddIcon from '@material-ui/icons/Add';
 import Icon from '@material-ui/core/Icon';
 import DeleteIcon from '@material-ui/icons/Delete';
-import { compose } from 'recompose';
-import { withRouter } from 'react-router-dom';
 
 const styles = theme => ({
   iconLabel: {
@@ -31,40 +29,17 @@ const ICONS = ["", "arrow_back", "arrow_forward", "arrow_upward", "arrow_downwar
   "electric_car", "local_taxi", "electric_scooter", "two_wheeler", "north_east", "north_west",
   "south_east", "south_west", "child_friendly", "elderly", "skateboarding"]
 
-class MeasurementOptions extends Component {
-  constructor() {
-    super();
+function MeasurementOptions(props) {
+  const { classes } = props;
 
-    this.state = {
-      id: 0,
-      name: "",
-      options: [
-        { name: "", icon: "" }
-      ],
-    }
-  }
-
-  componentDidMount() {
-    const { id, name, options } = this.props
-
-    // update id, because this is always given
-    this.setState({
-      id: id,
-    })
-
-    // only update options if something has provided, otherwise leave default
-    if (options) {
-      this.setState({
-        name: name,
-        options: options
-      })
-    }
-  }
+  const [options, setOptions] = useState(props.options);
+  const [name, setName] = useState(props.name);
+  const [id, setId] = useState(props.id);
 
   // updates the measurement option on the given index with the given event value
-  handleMeasurementOptionChange = idx => evt => {
-    const { handleOptionChange } = this.props
-    const newOptions = this.state.options.map((option, sidx) => {
+  const handleMeasurementOptionChange = idx => evt => {
+    const { handleOptionChange } = props
+    const newOptions = options.map((option, sidx) => {
       if (idx !== sidx) return option
 
       // check which information has been updated, either option name or option icon
@@ -75,95 +50,83 @@ class MeasurementOptions extends Component {
       }
     });
 
-    this.setState({ options: newOptions });
+    setOptions(newOptions);
 
     // execute parent function in usecaseEditor
-    handleOptionChange(this.state.id, newOptions);
+    handleOptionChange(id, newOptions);
   };
 
   // add measurement option
-  handleAddMeasurementOption = () => {
-    this.setState({
-      options: this.state.options.concat([{ name: "" }])
-    });
+  const handleAddMeasurementOption = () => {
+    setOptions(options.concat([{ name: "", icon: "" }]));
   };
 
   // remove measurement option
-  handleRemoveMeasurementOption = idx => () => {
-    const { handleOptionChange } = this.props
-    let tempOptions = this.state.options.filter((s, sidx) => idx !== sidx)
+  const handleRemoveMeasurementOption = idx => () => {
+    const { handleOptionChange } = props
+    let tempOptions = options.filter((s, sidx) => idx !== sidx)
 
-    this.setState({
-      options: tempOptions
-    }
-    );
+    setOptions(tempOptions);
 
     // update parent state
-    handleOptionChange(this.state.id, tempOptions)
-  };
-
-  render() {
-    const { classes } = this.props;
-
-    return (
-      <div>
-        {this.state.options.map((option, idx) => (
-          <div className={classes.options} key={`div-${idx + 1}`}>
-            <TextField
-              required
-              key={this.idx + 1}
-              name="optionName"
-              type="text"
-              label="Option name"
-              placeholder={`Option #${idx + 1} name`}
-              value={option.name}
-              onChange={this.handleMeasurementOptionChange(idx)}
-              variant="outlined"
-              size="small"
-            />
-
-            <InputLabel id="labelIconOption" className={classes.iconLabel}>Icon</InputLabel>
-            <Select
-              labelId="labelIconOption"
-              name="optionIcon"
-              id="optionIcon"
-              value={option.icon}
-              onChange={this.handleMeasurementOptionChange(idx)}
-            >
-              {
-                ICONS.map((icon, i) => (
-                  <MenuItem key={i} value={icon}>
-                    {<Icon>{icon}</Icon>}
-                  </MenuItem>
-                ))
-              }
-            </Select>
-
-            <Button
-              size="small"
-              color="primary"
-              type="button"
-              onClick={this.handleRemoveMeasurementOption(idx)}
-            >
-              <DeleteIcon /> Remove Option
-            </Button>
-
-            <Button
-              size="small"
-              color="primary"
-              type="button"
-              onClick={this.handleAddMeasurementOption}
-            >
-              <AddIcon /> Add Option
-            </Button>
-          </div>
-        ))}
-      </div>
-    )
+    handleOptionChange(id, tempOptions)
   }
+
+  return (
+    <div>
+      {options.map((option, idx) => (
+        <div className={classes.options} key={`div-${idx + 1}`}>
+          <TextField
+            required
+            key={idx + 1}
+            name="optionName"
+            type="text"
+            label="Option name"
+            placeholder={`Option #${idx + 1} name`}
+            value={option.name}
+            onChange={handleMeasurementOptionChange(idx)}
+            variant="outlined"
+            size="small"
+          />
+
+          <InputLabel id="labelIconOption" className={classes.iconLabel}>Icon</InputLabel>
+          <Select
+            labelId="labelIconOption"
+            name="optionIcon"
+            id="optionIcon"
+            value={option.icon}
+            onChange={handleMeasurementOptionChange(idx)}
+          >
+            {
+              ICONS.map((icon, i) => (
+                <MenuItem key={i} value={icon}>
+                  {<Icon>{icon}</Icon>}
+                </MenuItem>
+              ))
+            }
+          </Select>
+
+          <Button
+            size="small"
+            color="primary"
+            type="button"
+            onClick={handleRemoveMeasurementOption(idx)}
+          >
+            <DeleteIcon /> Remove Option
+          </Button>
+
+          <Button
+            size="small"
+            color="primary"
+            type="button"
+            onClick={handleAddMeasurementOption}
+          >
+            <AddIcon /> Add Option
+          </Button>
+        </div>
+      ))}
+    </div>
+  )
 }
 
-export default compose(
-  withRouter,
-  withStyles(styles),
-)(MeasurementOptions);
+export default withStyles(styles)(MeasurementOptions);

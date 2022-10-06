@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from 'react';
-import { withRouter  } from 'react-router-dom';
+import { withRouter } from 'react-router-dom';
 import {
   withStyles,
   Typography,
@@ -60,31 +60,31 @@ class UseCaseMeasurement extends Component {
     }
 
     body.pinCode = new URLSearchParams(this.props.location.search).get("pinCode")
-    if(!body.pinCode) {
+    if (!body.pinCode) {
       body.pinCode = prompt("Please provide the secure pincode of this use case to access the measurement area")
-    } 
+    }
 
     this.setState({
       pinCode: body.pinCode
     })
 
     // check if correct pin has been provided
-    this.fetch('post','/useCases/' + useCaseId + '/authorize', body)
-    .then(response => {
+    this.fetch('post', '/useCases/' + useCaseId + '/authorize', body)
+      .then(response => {
         // if succesfully set useCase ID and load cases, otherwise show error
         this.setState({
           useCaseId: useCaseId
         }, this.getUseCase)
-    })
-    .catch(error => {
-      this.setState({
-        error: { message: "Wrong pinCode provide there for no access granted"}
       })
-    })
+      .catch(error => {
+        this.setState({
+          error: { message: "Wrong pinCode provide there for no access granted" }
+        })
+      })
   }
 
   async fetch(method, endpoint, body, surpressError) {
-    this.setState({loading: true})
+    this.setState({ loading: true })
 
     try {
       const response = await fetch(`${API}/api${endpoint}`, {
@@ -96,9 +96,9 @@ class UseCaseMeasurement extends Component {
         },
       });
 
-      this.setState({loading: false})
+      this.setState({ loading: false })
 
-      if(response.ok && (response.status === 201 || response.status === 200)) {
+      if (response.ok && (response.status === 201 || response.status === 200)) {
         return await response.json();
       } else {
         this.setState({
@@ -109,29 +109,29 @@ class UseCaseMeasurement extends Component {
       }
     } catch (error) {
       // used to surpress the error notifcation
-      if(!surpressError) {
-        this.setState({ 
+      if (!surpressError) {
+        this.setState({
           error: error,
           loading: false,
         });
       }
 
-      throw new Error(error)      
+      throw new Error(error)
     }
   }
 
   // recursive extension of the fetch method
   // allows to reexecute failed fetch calls until they succeded
-  async fetch_retry (method, endpoint, body) {
+  async fetch_retry(method, endpoint, body) {
     let error = null
 
     try {
-        return await this.fetch(method, endpoint, body, true)
-    } 
-    catch(err) {
+      return await this.fetch(method, endpoint, body, true)
+    }
+    catch (err) {
       error = err
       // retry after some wait period, and update state if not already done
-      if(!this.state.connectivityIssue) {
+      if (!this.state.connectivityIssue) {
         this.setState({
           connectivityIssue: true,
           error: { message: "Error when communicating with backend. We are continuously trying it and will inform you as soon as the connection has ben reestablished. The measurements are still being saved locally and synchronized as soon as connection is present again." }
@@ -139,18 +139,18 @@ class UseCaseMeasurement extends Component {
       }
 
       await this.sleep(REXECUTION_TIMEOUT)
-        return this.fetch_retry(method, endpoint, body)
+      return this.fetch_retry(method, endpoint, body)
     }
     finally {
       // if err
-      if(!error && this.state.connectivityIssue) {
+      if (!error && this.state.connectivityIssue) {
         this.setState({
           connectivityIssue: false,
           success: "Connection established again. Now syncing your measurements. Check the above measurement counter."
         })
       }
     }
-    
+
   }
 
   // function which sleeps some defined milliseconds
@@ -176,16 +176,16 @@ class UseCaseMeasurement extends Component {
 
   async deleteLastMeasurement() {
     //only allowed to delete the last measurement by themselves
-    if(this.state.lastMeasurementId) {
+    if (this.state.lastMeasurementId) {
       await this.fetch("DELETE", "/measurements/" + this.state.lastMeasurementId)
 
       this.getMeasurementsCount()
-      this.setState({ 
+      this.setState({
         lastMeasurementId: "",
         success: "Your last measurement was successfully deleted"
       })
     } else {
-      this.setState({ 
+      this.setState({
         error: {
           message: "You can only delete your own last measurement, please execute a measurement first"
         }
@@ -193,23 +193,23 @@ class UseCaseMeasurement extends Component {
     }
   }
 
-  async saveMeasurement (groupName, buttonValue) {
+  async saveMeasurement(groupName, buttonValue) {
     let postData = {
       "useCase": this.state.useCaseId,
       "groupName": groupName,
       "timestamp": Date.now(),      // set measurement time in frontend
-      "value": buttonValue 
+      "value": buttonValue
     }
-    
+
     // post data as long till it is successfull
     await this.fetch_retry('post', `/measurements/`, postData)
-    .then(response => {
-      this.setState({
-        lastMeasurementId: response.id
+      .then(response => {
+        this.setState({
+          lastMeasurementId: response.id
+        })
+
+        this.getMeasurementsCount()
       })
-      
-      this.getMeasurementsCount()
-    })
   }
 
   // copy the direct link to a use case measurement to the clipboard
@@ -233,7 +233,7 @@ class UseCaseMeasurement extends Component {
   // toogle full screen
   toggleFullscreen() {
     let elem = document.querySelector("body");
-  
+
     if (!document.fullscreenElement) {
       elem.requestFullscreen().catch(err => {
         alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
@@ -249,45 +249,45 @@ class UseCaseMeasurement extends Component {
 
     return (
       <Fragment>
-        <Typography className={ classes.title } variant="h6">Measurements { this.state.useCaseDetails.name } </Typography>
+        <Typography className={classes.title} variant="h6">Measurements {this.state.useCaseDetails.name} </Typography>
 
-        { /* action items */ }
+        { /* action items */}
         <ActionItems
-          toggleFullscreen = { this.toggleFullscreen }
-          toogleIconView = { this.toogleIconView }
-          shareLink = { this.shareLink }
-          deleteLastMeasurement = { this.deleteLastMeasurement }
-          measurementsCount = { this.state.measurementsCount }
-          useCaseId = { this.state.useCaseId }
+          toggleFullscreen={this.toggleFullscreen}
+          toogleIconView={this.toogleIconView}
+          shareLink={this.shareLink}
+          deleteLastMeasurement={this.deleteLastMeasurement}
+          measurementsCount={this.state.measurementsCount}
+          useCaseId={this.state.useCaseId}
         />
 
         {this.state.useCaseDetails !== "" ? (
           // measurements present
-        
-          this.state.useCaseDetails.measurementOptions.map(function(groupElement, groupIndex, groupArray) {             
+
+          this.state.useCaseDetails.measurementOptions.map(function (groupElement, groupIndex, groupArray) {
             // iteration for groups
 
-            let buttons = groupElement.options.map(function(optionElement, opionIndex, optionsArray) {
+            let buttons = groupElement.options.map(function (optionElement, opionIndex, optionsArray) {
               // iteration for buttons
-              
-              return(
+
+              return (
                 <Grid item xs>
-                  <MeasurementButtons 
-                    onClick={ that.saveMeasurement} 
-                    key={`${ opionIndex }-${ optionElement.name }`}
-                    groupName={ groupElement.name } 
-                    buttonValue={ optionElement }
-                    length={ optionsArray.length } 
-                    groupLength={ groupArray.length }
-                    displayText={ that.state.displayText }
+                  <MeasurementButtons
+                    onClick={that.saveMeasurement}
+                    key={`${opionIndex}-${optionElement.name}`}
+                    groupName={groupElement.name}
+                    buttonValue={optionElement}
+                    length={optionsArray.length}
+                    groupLength={groupArray.length}
+                    displayText={that.state.displayText}
                   />
                 </Grid>
               )
             })
 
-            return(
-              <div className={ classes.root } key={ `${ groupIndex }buttonList` }>
-                <Typography className={classes.measurementGroupTitle}>{ groupElement.name }</Typography>
+            return (
+              <div className={classes.root} key={`${groupIndex}buttonList`}>
+                <Typography className={classes.measurementGroupTitle}>{groupElement.name}</Typography>
                 <Grid container spacing={1}>
                   {buttons}
                 </Grid>
@@ -302,19 +302,19 @@ class UseCaseMeasurement extends Component {
           )
         )}
 
-        { /* Flag based display of error snackbar */ }
+        { /* Flag based display of error snackbar */}
         {this.state.error && (
           <ErrorSnackbar
             onClose={() => this.setState({ error: null })}
-            message={ this.state.error.message }
+            message={this.state.error.message}
           />
         )}
 
-        { /* Flag based display of info snackbar */ }
+        { /* Flag based display of info snackbar */}
         {this.state.success && (
           <InfoSnackbar
             onClose={() => this.setState({ success: null })}
-            message={ this.state.success }
+            message={this.state.success}
           />
         )}
       </Fragment>

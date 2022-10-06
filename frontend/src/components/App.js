@@ -20,17 +20,17 @@ const styles = theme => ({
 });
 
 const App = ({ classes }) => (
-<Fragment>
+  <Fragment>
     <CssBaseline />
     <AppHeader />
-    <main className={ classes.main }>
-      <Route exact path="/" component={ UseCaseManager } />
-      <Route exact path="/useCases" component={ UseCaseManager } />
-      <Route exact path="/useCases/:id/measurements" component={ UseCaseMeasurement } />
-      <Route exact path="/useCases/:id" component={ UseCaseManager } />
-      <Route exact path="/useCases/:id/edit" component={ UseCaseManager } />
-      <Route exact path="/useCases/:id/copy" component={ UseCaseManager } />
-      <Route exact path="/useCases/:id/measurements/view" component={ MeasurementView } />
+    <main className={classes.main}>
+      <Route exact path="/" component={UseCaseManager} />
+      <Route exact path="/useCases" component={UseCaseManager} />
+      <Route exact path="/useCases/:id/measurements" component={UseCaseMeasurement} />
+      <Route exact path="/useCases/:id" component={UseCaseManager} />
+      <Route exact path="/useCases/:id/edit" component={UseCaseManager} />
+      <Route exact path="/useCases/:id/copy" component={UseCaseManager} />
+      <Route exact path="/useCases/:id/measurements/view" component={MeasurementView} />
     </main>
   </Fragment>
 );

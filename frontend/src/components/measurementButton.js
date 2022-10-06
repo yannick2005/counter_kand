@@ -1,22 +1,22 @@
 import React, { Component } from 'react';
 import { compose } from 'recompose';
 import {
-  withStyles,
-  Button,
-  Icon
+    withStyles,
+    Button,
+    Icon
 } from '@material-ui/core';
 
 const styles = theme => ({
     button: props => ({
-      width: '100%',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '10vh',
-      overflow: "hidden",
-      wordBreak: 'break-all',
+        width: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '10vh',
+        overflow: "hidden",
+        wordBreak: 'break-all',
     }),
-  });
+});
 
 class MeasurementButton extends Component {
     constructor() {
@@ -29,7 +29,7 @@ class MeasurementButton extends Component {
     }
 
     componentDidMount() {
-        this.setState({ 
+        this.setState({
             groupName: this.props.groupName,
             buttonValue: this.props.buttonValue.name,
             icon: this.props.buttonValue.icon,
@@ -45,18 +45,18 @@ class MeasurementButton extends Component {
         const { classes, displayText } = this.props
 
         return (
-            <Button variant="outlined" 
-                    color="primary" 
-                    className={ classes.button } 
-                    onClick={this.handleButtonPress} 
+            <Button variant="outlined"
+                color="primary"
+                className={classes.button}
+                onClick={this.handleButtonPress}
             >
                 { /* display text only if user wants that */}
                 {displayText && (
                     this.state.buttonValue
                 )}
-                <br/>
+                <br />
 
-                { this.state.icon && (
+                {this.state.icon && (
                     <Icon>{this.state.icon}</Icon>
                 )}
             </Button>
@@ -65,5 +65,5 @@ class MeasurementButton extends Component {
 };
 
 export default compose(
-    withStyles(styles), 
+    withStyles(styles),
 )(MeasurementButton);

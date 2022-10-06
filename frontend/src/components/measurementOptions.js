@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
 import {
-  TextField,
-  withStyles,
-  Button,
-  InputLabel,
-  MenuItem,
-  Select
+    TextField,
+    withStyles,
+    Button,
+    InputLabel,
+    MenuItem,
+    Select
 } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import Icon from '@material-ui/core/Icon';
@@ -24,20 +24,20 @@ const styles = theme => ({
 
 // Definition of Icons which can be used for buttons
 // source https://material.io/resources/icons/?icon=arrow_downward&style=baseline
-const ICONS = ["", "arrow_back", "arrow_forward", "arrow_upward", "arrow_downward", 
-              "swap_horiz", "swap_vert", "accessible", "commute", "flight_land", 
-              "flight_takeoff", "work", "login", "logout", "pedal_bike", "directions_walk", 
-              "directions_car", "directions_bus", "directions_railway", "tram", "electric_bike", 
-              "electric_car", "local_taxi", "electric_scooter", "two_wheeler", "north_east", "north_west", 
-              "south_east", "south_west", "child_friendly", "elderly", "skateboarding"]
+const ICONS = ["", "arrow_back", "arrow_forward", "arrow_upward", "arrow_downward",
+    "swap_horiz", "swap_vert", "accessible", "commute", "flight_land",
+    "flight_takeoff", "work", "login", "logout", "pedal_bike", "directions_walk",
+    "directions_car", "directions_bus", "directions_railway", "tram", "electric_bike",
+    "electric_car", "local_taxi", "electric_scooter", "two_wheeler", "north_east", "north_west",
+    "south_east", "south_west", "child_friendly", "elderly", "skateboarding"]
 
 class MeasurementOptions extends Component {
     constructor() {
         super();
-        
+
         this.state = {
             id: 0,
-            name: "", 
+            name: "",
             options: [
                 { name: "", icon: "" }
             ],
@@ -46,35 +46,35 @@ class MeasurementOptions extends Component {
 
     componentDidMount() {
         const { id, name, options } = this.props
-        
+
         // update id, because this is always given
         this.setState({
             id: id,
         })
 
         // only update options if something has provided, otherwise leave default
-        if(options) {
-          this.setState({
-            name: name, 
-            options: options
-          })
+        if (options) {
+            this.setState({
+                name: name,
+                options: options
+            })
         }
     }
-    
+
     // updates the measurement option on the given index with the given event value
     handleMeasurementOptionChange = idx => evt => {
         const { handleOptionChange } = this.props
         const newOptions = this.state.options.map((option, sidx) => {
             if (idx !== sidx) return option
-            
+
             // check which information has been updated, either option name or option icon
-            if(evt.target.name === "optionName") {
+            if (evt.target.name === "optionName") {
                 return { name: evt.target.value, icon: option.icon }
             } else {
                 return { name: option.name, icon: evt.target.value }
             }
         });
-    
+
         this.setState({ options: newOptions });
 
         // execute parent function in usecaseEditor
@@ -87,7 +87,7 @@ class MeasurementOptions extends Component {
             options: this.state.options.concat([{ name: "" }])
         });
     };
-    
+
     // remove measurement option
     handleRemoveMeasurementOption = idx => () => {
         const { handleOptionChange } = this.props
@@ -95,7 +95,7 @@ class MeasurementOptions extends Component {
 
         this.setState({
             options: tempOptions
-            }
+        }
         );
 
         // update parent state
@@ -108,9 +108,9 @@ class MeasurementOptions extends Component {
         return (
             <div>
                 {this.state.options.map((option, idx) => (
-                    <div className={ classes.options } key={`div-${idx + 1}`}>
+                    <div className={classes.options} key={`div-${idx + 1}`}>
                         <TextField
-                            required 
+                            required
                             key={this.idx + 1}
                             name="optionName"
                             type="text"
@@ -122,39 +122,39 @@ class MeasurementOptions extends Component {
                             size="small"
                         />
 
-                        <InputLabel id="labelIconOption" className={classes.iconLabel }>Icon</InputLabel>
+                        <InputLabel id="labelIconOption" className={classes.iconLabel}>Icon</InputLabel>
                         <Select
                             labelId="labelIconOption"
                             name="optionIcon"
                             id="optionIcon"
-                            value={ option.icon }
-                            onChange={ this.handleMeasurementOptionChange(idx) }
+                            value={option.icon}
+                            onChange={this.handleMeasurementOptionChange(idx)}
                         >
-                        {
-                            ICONS.map((icon, i) => (
-                                <MenuItem key={ i } value={ icon }>
-                                    { <Icon>{icon}</Icon> }
-                                </MenuItem>
-                            ))
-                        }
+                            {
+                                ICONS.map((icon, i) => (
+                                    <MenuItem key={i} value={icon}>
+                                        {<Icon>{icon}</Icon>}
+                                    </MenuItem>
+                                ))
+                            }
                         </Select>
-                        
-                        <Button 
-                            size="small" 
-                            color="primary" 
+
+                        <Button
+                            size="small"
+                            color="primary"
                             type="button"
                             onClick={this.handleRemoveMeasurementOption(idx)}
                         >
-                            <DeleteIcon/> Remove Option
+                            <DeleteIcon /> Remove Option
                         </Button>
 
-                        <Button 
-                            size="small" 
-                            color="primary" 
-                            type="button" 
+                        <Button
+                            size="small"
+                            color="primary"
+                            type="button"
                             onClick={this.handleAddMeasurementOption}
                         >
-                            <AddIcon/> Add Option
+                            <AddIcon /> Add Option
                         </Button>
                     </div>
                 ))}
@@ -166,4 +166,4 @@ class MeasurementOptions extends Component {
 export default compose(
     withRouter,
     withStyles(styles),
-  )(MeasurementOptions);
+)(MeasurementOptions);

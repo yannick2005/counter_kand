@@ -1,4 +1,4 @@
-import React, { Component, Fragment, forwardRef  } from 'react';
+import React, { Component, Fragment, forwardRef } from 'react';
 import { withRouter } from 'react-router-dom';
 import {
   withStyles,
@@ -70,7 +70,7 @@ class MeasurementView extends Component {
   }
 
   async fetch(method, endpoint, body) {
-    this.setState({loading: true})
+    this.setState({ loading: true })
 
     try {
       const response = await fetch(`${API}/api${endpoint}`, {
@@ -82,9 +82,9 @@ class MeasurementView extends Component {
         },
       });
 
-      this.setState({loading: false})
-      
-      if(response.ok && (response.status === 201 || response.status === 200)) {
+      this.setState({ loading: false })
+
+      if (response.ok && (response.status === 201 || response.status === 200)) {
         return await response.json();
       } else {
         console.error(response.status)
@@ -97,7 +97,7 @@ class MeasurementView extends Component {
     } catch (error) {
       console.error(error);
 
-      this.setState({ 
+      this.setState({
         error: error,
         loading: false
       });
@@ -112,18 +112,18 @@ class MeasurementView extends Component {
     let measurements = useCase.Measurements
     let tableOutput = []
 
-    if(measurements) {
+    if (measurements) {
       measurements.forEach(measurement => {
-          tableOutput.push({
-            useCase: useCase.name,
-            groupName: measurement.groupName,
-            value: measurement.value,
-            timestamp: measurement.timestamp.split("+")[0]
-          })
+        tableOutput.push({
+          useCase: useCase.name,
+          groupName: measurement.groupName,
+          value: measurement.value,
+          timestamp: measurement.timestamp.split("+")[0]
+        })
       })
 
-      this.setState({ 
-        useCase: useCase, 
+      this.setState({
+        useCase: useCase,
         measurements: measurements,
         tableOutput: tableOutput
       });
@@ -134,29 +134,28 @@ class MeasurementView extends Component {
     const today = new Date();
     const date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
     const time = today.getHours() + "-" + today.getMinutes() + "-" + today.getSeconds();
-    
+
     return date + '_' + time;
   }
 
   render() {
-    const { classes } = this.props;
     const title = "List measurements for " + this.state.useCase.name                              // define title of website
-    const exportFileName = "list_measurements_" + this.state.useCase.name + "_" + this.getDateTime()        // define export file name 
+    const exportFileName = "list_measurements_" + this.state.useCase.name + "_" + this.getDateTime()        // define export file name
 
     return (
       <Fragment>
         {this.state.measurements.length > 0 ? (
           // data available, present table
           <MaterialTable
-            icons={ tableIcons }
-            title={ title }
+            icons={tableIcons}
+            title={title}
             columns={[
-              { title: 'Use case', field: 'useCase'},
-              { title: 'Measurement group', field: 'groupName'},
+              { title: 'Use case', field: 'useCase' },
+              { title: 'Measurement group', field: 'groupName' },
               { title: 'Measurement value', field: 'value' },
               { title: 'Timestamp', field: 'timestamp' }
             ]}
-            data={ this.state.tableOutput }        
+            data={this.state.tableOutput}
             options={{
               exportFileName: exportFileName,
               exportButton: true,
@@ -164,27 +163,27 @@ class MeasurementView extends Component {
               filtering: true,
               search: false,
               pageSize: 20,
-              pageSizeOptions: [20, 50,100,1000]
+              pageSizeOptions: [20, 50, 100, 1000]
             }}
           />
         ) : (
           // no data available
           !this.state.loading && (
-            <Typography variant="subtitle1">So far no measurements have been recorded for use case { this.state.useCase.name }</Typography>
+            <Typography variant="subtitle1">So far no measurements have been recorded for use case {this.state.useCase.name}</Typography>
           )
         )}
 
-        { /* Flag based display of error snackbar */ }
+        { /* Flag based display of error snackbar */}
         {this.state.error && (
           <ErrorSnackbar
             onClose={() => this.setState({ error: null })}
-            message={ this.state.error.message }
+            message={this.state.error.message}
           />
         )}
 
-        { /* Flag based display of loadingbar */ }
+        { /* Flag based display of loadingbar */}
         {this.state.loading && (
-          <LoadingBar/>
+          <LoadingBar />
         )}
       </Fragment>
     );

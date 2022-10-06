@@ -4,6 +4,7 @@
 
 # React Dev Port
 PORT=3100
+GENERATE_SOURCEMAP=false #https://stackoverflow.com/questions/36051891/esri-failed-to-parse-source-map
 
 # Key for Google Captcha v3
 REACT_APP_CAPTCHA_SITE_KEY=key

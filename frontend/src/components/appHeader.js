@@ -58,29 +58,29 @@ class AppHeader extends Component {
 
     return (
       <AppBar position="static">
-        <Toolbar className={ classes.toolBar }>
-          <Button color="inherit" component={ Link } to="/">
-            <img className={ classes.image } src={`${window.location.origin}/images/fvv-header.png`} alt="FVV header image"/>
-            <AvTimerIcon/>            
+        <Toolbar className={classes.toolBar}>
+          <Button color="inherit" component={Link} to="/">
+            <img className={classes.image} src={`${window.location.origin}/images/fvv-header.png`} alt="FVV header" />
+            <AvTimerIcon />
             <Typography variant="h6" color="inherit">
-              Counter 
+              Counter
             </Typography>
           </Button>
 
-          <Button 
-            onClick={ this.handleChange }
-            className={ classes.headerButton }
+          <Button
+            onClick={this.handleChange}
+            className={classes.headerButton}
           >
-            <HelpOutlineIcon 
+            <HelpOutlineIcon
               color="secondary"
               aria-label="add"
-              className={ classes.helpIcon }
+              className={classes.helpIcon}
             />
           </Button>
 
-          <Help 
-            handleChange={ this.handleChange } 
-            showModal={ this.state.showHelp }
+          <Help
+            handleChange={this.handleChange}
+            showModal={this.state.showHelp}
           />
         </Toolbar>
       </AppBar>
@@ -89,5 +89,5 @@ class AppHeader extends Component {
 }
 
 export default compose(
-  withStyles(styles), 
+  withStyles(styles),
 )(AppHeader);

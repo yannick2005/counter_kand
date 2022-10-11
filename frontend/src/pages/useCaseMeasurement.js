@@ -211,6 +211,8 @@ function UseCaseMeasurement(props) {
     }
   }
 
+  console.log(useCaseDetails)
+
   return (
     <Fragment>
       <Typography className={classes.title} variant="h6">Measurements {useCaseDetails.name} </Typography>
@@ -240,7 +242,7 @@ function UseCaseMeasurement(props) {
                   onClick={saveMeasurement}
                   key={`${opionIndex}-${optionElement.name}`}
                   groupName={groupElement.name}
-                  buttonValue={optionElement.value}
+                  buttonValue={optionElement.name}
                   length={optionsArray.length}
                   groupLength={groupArray.length}
                   displayText={displayText}

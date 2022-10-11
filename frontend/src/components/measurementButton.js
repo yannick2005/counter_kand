@@ -1,69 +1,57 @@
-import React, { Component } from 'react';
-import { compose } from 'recompose';
+import React, { useEffect, useState } from 'react';
 import {
-    withStyles,
-    Button,
-    Icon
+  withStyles,
+  Button,
+  Icon
 } from '@material-ui/core';
 
 const styles = theme => ({
-    button: props => ({
-        width: '100%',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '10vh',
-        overflow: "hidden",
-        wordBreak: 'break-all',
-    }),
+  button: props => ({
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: '10vh',
+    overflow: "hidden",
+    wordBreak: 'break-all',
+  }),
 });
 
-class MeasurementButton extends Component {
-    constructor() {
-        super();
-        this.state = {
-            groupName: '',
-            buttonValue: '',
-            icon: '',
-        }
-    }
+function MeasurementButton(props) {
+  const { classes, displayText } = props;
 
-    componentDidMount() {
-        this.setState({
-            groupName: this.props.groupName,
-            buttonValue: this.props.buttonValue.name,
-            icon: this.props.buttonValue.icon,
-        })
-    }
+  const [groupName, setGroupName] = useState("");
+  const [buttonValue, setButtonValue] = useState("");
+  const [icon, setIcon] = useState("");
 
-    handleButtonPress = () => {
-        const { onClick } = this.props
-        onClick(this.state.groupName, this.state.buttonValue)
-    }
+  useEffect(() => {
+    setGroupName(props.groupName);
+    setButtonValue(props.buttonValue);
+    setIcon(props.icon);
+  }, [props.groupName, props.buttonValue, props.icon]);
 
-    render() {
-        const { classes, displayText } = this.props
+  const handleButtonPress = () => {
+    const { onClick } = props
+    onClick(groupName, buttonValue)
+  }
 
-        return (
-            <Button variant="outlined"
-                color="primary"
-                className={classes.button}
-                onClick={this.handleButtonPress}
-            >
-                { /* display text only if user wants that */}
-                {displayText && (
-                    this.state.buttonValue
-                )}
-                <br />
+  return (
+    <Button variant="outlined"
+      color="primary"
+      className={classes.button}
+      onClick={handleButtonPress}
+    >
+      { /* display text only if user wants that */}
+      {displayText && (
+        buttonValue
+      )}
+      <br />
 
-                {this.state.icon && (
-                    <Icon>{this.state.icon}</Icon>
-                )}
-            </Button>
-        )
-    }
-};
+      {icon && (
+        <Icon>{icon}</Icon>
+      )}
+    </Button>
+  )
+}
 
-export default compose(
-    withStyles(styles),
-)(MeasurementButton);
+export default withStyles(styles)(MeasurementButton);

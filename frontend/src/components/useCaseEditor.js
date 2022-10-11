@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   TextField,
   withStyles,
@@ -15,11 +15,10 @@ import AddIcon from '@material-ui/icons/Add';
 import SaveAltIcon from '@material-ui/icons/SaveAlt';
 import ClearIcon from '@material-ui/icons/Clear';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
-import { compose } from 'recompose';
-import { withRouter } from 'react-router-dom';
 
 import './utensils'
 import MeasurementOptions from './measurementOptions'
+import { deepCopy } from './utensils';
 
 const styles = theme => ({
   modal: {
@@ -51,204 +50,178 @@ const styles = theme => ({
   }
 });
 
-class UseCaseditor extends Component {
-  constructor() {
-    super();
+function UseCaseditor(props) {
+  const { classes, useCase, useCaseEditorMode, errorMessage, onSave, onClose } = props;
 
-    this.state = {
-      id: "",
-      name: "",
-      pinCode: "",
-      measurementOptions: [
-        { id: 0, name: "", options: [{ name: "", icon: "" }] }
-      ]
-    };
+  const [id, setId] = useState(0);
+  const [name, setName] = useState("");
+  const [pinCode, setPinCode] = useState("");
+  const [measurementOptions, setMeasurementOptions] = useState([]);
 
-    // bindings
-    this.handleOptionChange = this.handleOptionChange.bind(this)
-  }
+  useEffect(() => {
+    if (useCaseEditorMode === "edit") {
+      setId(useCase.id);
+      setName(useCase.name);
+      setMeasurementOptions(useCase.measurementOptions);
+    } else if (useCaseEditorMode === "copy") {
+      let newUseCase = deepCopy(useCase)
+      newUseCase.name = newUseCase.name + " (Copy)"
 
-  componentDidMount() {
-    const { useCase } = this.props
-
-    if (useCase) {
-      // only change state of usecase passed
-      this.setState({
-        id: useCase.id,
-        name: useCase.name,
-        measurementOptions: useCase.measurementOptions
-      })
+      setId(null);
+      setName("Copy " + newUseCase.name);
+      setMeasurementOptions(newUseCase.measurementOptions);
     }
-  }
+  }, [useCase, useCaseEditorMode]);
 
   // called by child MeasurementOptions when change of input
-  handleOptionChange = function (groupIndex, options) {
-    let tmpOptions = this.state.measurementOptions
+  const handleOptionChange = function (groupIndex, options) {
+    let tmpOptions = measurementOptions
 
     tmpOptions[groupIndex].options = options
-    this.setState({
-      measurementOptions: tmpOptions
-    })
+    setMeasurementOptions(tmpOptions)
   }
 
   // function handling submit of form
-  handleSubmit = evt => {
+  const handleSubmit = evt => {
     evt.preventDefault();
-
-    const { onSave } = this.props
-    const { id, name, pinCode, measurementOptions } = this.state;
 
     // execute parent function in useCaseManager
     onSave(id, name, pinCode, measurementOptions)
   };
 
-  handleOptionGroupName = function (index, event) {
-    let measurementOptions = this.state.measurementOptions
-
-    measurementOptions[index].name = event.target.value
-    this.setState({
-      measurementOptions: measurementOptions
-    })
+  const handleOptionGroupName = (index, event) => {
+    let tempMeasurementOptions = deepCopy(measurementOptions)
+    tempMeasurementOptions[index].name = event.target.value
+    setMeasurementOptions(tempMeasurementOptions)
   }
 
-  handleChange = (evt) => {
+  const handleChange = (evt) => {
     const target = evt.target
     const name = target.name
     let value = target.value
 
-    this.setState({
-      [name]: value
-    })
+    switch (name) {
+      case "name":
+        setName(value)
+        break
+      case "pinCode":
+        setPinCode(value)
+        break
+      default:
+        break
+    }
   }
 
-  handleAddOptionGroup = () => {
-    let idx = this.state.measurementOptions.length
+  const handleAddOptionGroup = () => {
+    let idx = measurementOptions.length
 
-    this.setState({
-      measurementOptions: this.state.measurementOptions.concat([{ id: idx, name: "", options: [{ name: "" }] }])
-    });
+    setMeasurementOptions(measurementOptions.concat([{ id: idx, name: "", options: [{ name: "", icon: "" }] }]))
   };
 
-  handleRemoveOptionGroup = idx => () => {
-    this.setState({
-      measurementOptions: this.state.measurementOptions.filter((s, sidx) => idx !== sidx)
-    });
+  const handleRemoveOptionGroup = idx => () => {
+    setMeasurementOptions(measurementOptions.filter((s, sidx) => idx !== sidx));
   };
 
-  handleCopyOptionGroup = idx => () => {
-    let measurementOptions = this.state.measurementOptions
-    let newMeasurementOption = { ...measurementOptions[idx] }
-    newMeasurementOption.id = this.state.measurementOptions.length
-
-    measurementOptions.insert(idx, newMeasurementOption)
-
-    this.setState({
-      measurementOptions: measurementOptions
-    })
+  const handleCopyOptionGroup = idx => () => {
+    let tempMeasurementOptions = measurementOptions
+    let newMeasurementOption = { ...tempMeasurementOptions[idx] }
+    newMeasurementOption.id = tempMeasurementOptions.length
+    tempMeasurementOptions.insert(idx, newMeasurementOption)
+    setMeasurementOptions(tempMeasurementOptions)
   }
 
-  render() {
-    const { classes, history, errorMessage } = this.props;
-    var that = this
+  return (
+    <Modal
+      className={classes.modal}
+      onClose={() => onClose()}
+      open
+    >
+      <Card className={classes.modalCard}>
+        <form onSubmit={handleSubmit}>
+          <CardContent className={classes.modalCardContent}>
+            <TextField
+              required
+              type="text"
+              name="name"
+              key="inputUseCase"
+              placeholder="Use Case Name"
+              label="Use Case Name"
+              value={name}
+              onChange={handleChange}
+              variant="outlined"
+              size="small"
+              autoFocus
+            />
 
-    return (
-      <Modal
-        className={classes.modal}
-        onClose={() => history.goBack()}
-        open
-      >
-        <Card className={classes.modalCard}>
-          <form onSubmit={this.handleSubmit}>
-            <CardContent className={classes.modalCardContent}>
-              <TextField
-                required
-                type="text"
-                name="name"
-                key="inputUseCase"
-                placeholder="Use Case Name"
-                label="Use Case Name"
-                value={this.state.name}
-                onChange={this.handleChange}
-                variant="outlined"
-                size="small"
-                autoFocus
-              />
+            <TextField
+              required
+              type="text"
+              key="inputUseCasePinCode"
+              name="pinCode"
+              placeholder="Use Case Pin Code"
+              label="Use Case Pin Code"
+              className={classes.inputField}
+              value={pinCode}
+              onChange={handleChange}
+              error={errorMessage}
+              variant="outlined"
+              size="small"
+            />
 
-              <TextField
-                required
-                type="text"
-                key="inputUseCasePinCode"
-                name="pinCode"
-                placeholder="Use Case Pin Code"
-                label="Use Case Pin Code"
-                className={classes.inputField}
-                value={this.state.pinCode}
-                onChange={this.handleChange}
-                error={errorMessage}
-                variant="outlined"
-                size="small"
-              />
+            <Typography variant="subtitle1" >Measurement Options</Typography>
+            {measurementOptions && measurementOptions.length > 0 && measurementOptions.map(function (element, index) {
+              return (
+                <FormGroup key={`formgroup-${index}`} className={classes.formGroup}>
+                  <TextField
+                    required
+                    type="text"
+                    key={`input-optionGroup-${index}`}
+                    placeholder="Option group name"
+                    label="Option group name"
+                    value={element.name}
+                    onChange={(evt) => handleOptionGroupName(index, evt)}
+                    variant="outlined"
+                    size="small"
+                  />
 
-              <Typography variant="subtitle1" >Measurement Options</Typography>
-
-              {this.state.measurementOptions.map(function (element, index) {
-
-                return (
-                  <FormGroup key={`formgroup-${index}`} className={classes.formGroup}>
-                    <TextField
-                      required
-                      type="text"
-                      key={`input-optionGroup-${index}`}
-                      placeholder="Option group name"
-                      label="Option group name"
-                      value={element.name}
-                      onChange={(evt) => that.handleOptionGroupName(index, evt)}
-                      variant="outlined"
-                      size="small"
+                  <div>
+                    <MeasurementOptions
+                      id={index}
+                      name={element.name}
+                      options={element.options}
+                      handleOptionChange={handleOptionChange}
                     />
+                    <Button
+                      size="small"
+                      color="primary"
+                      className={classes.button}
+                      onClick={handleRemoveOptionGroup(index)}
+                    >
+                      <DeleteIcon />Remove Option Group
+                    </Button>
 
-                    <div>
-                      <MeasurementOptions
-                        id={index}
-                        name={element.name}
-                        options={element.options}
-                        handleOptionChange={that.handleOptionChange}
-                      />
-                      <Button
-                        size="small"
-                        color="primary"
-                        className={classes.button}
-                        onClick={that.handleRemoveOptionGroup(index)}
-                      >
-                        <DeleteIcon />Remove Option Group
-                      </Button>
-
-                      <Button
-                        size="small"
-                        color="primary"
-                        className={classes.button}
-                        onClick={that.handleCopyOptionGroup(index)}
-                      >
-                        <FileCopyIcon />Copy Option Group
-                      </Button>
-                    </div>
-                  </FormGroup>
-                )
-              })}
-            </CardContent>
-            <CardActions>
-              <Button size="small" color="primary" type="submit"><SaveAltIcon />Save</Button>
-              <Button size="small" color="primary" onClick={this.handleAddOptionGroup}><AddIcon />Add Option Group</Button>
-              <Button size="small" onClick={() => history.goBack()}><ClearIcon />Cancel</Button>
-            </CardActions>
-          </form>
-        </Card>
-      </Modal>
-    );
-  }
+                    <Button
+                      size="small"
+                      color="primary"
+                      className={classes.button}
+                      onClick={handleCopyOptionGroup(index)}
+                    >
+                      <FileCopyIcon />Copy Option Group
+                    </Button>
+                  </div>
+                </FormGroup>
+              )
+            })}
+          </CardContent>
+          <CardActions>
+            <Button size="small" color="primary" type="submit"><SaveAltIcon />Save</Button>
+            <Button size="small" color="primary" onClick={handleAddOptionGroup}><AddIcon />Add Option Group</Button>
+            <Button size="small" onClick={onClose}><ClearIcon />Cancel</Button>
+          </CardActions>
+        </form>
+      </Card>
+    </Modal>
+  );
 }
 
-export default compose(
-  withRouter,
-  withStyles(styles),
-)(UseCaseditor);
+export default withStyles(styles)(UseCaseditor);

@@ -1,10 +1,9 @@
-import React, { Component, Fragment, forwardRef } from 'react';
-import { withRouter } from 'react-router-dom';
+import React, { useState, Fragment, forwardRef, useEffect } from 'react';
 import {
   withStyles,
   Typography,
 } from '@material-ui/core';
-import { compose } from 'recompose';
+import { useParams } from 'react-router-dom';
 
 // icons for material table
 import AddBox from '@material-ui/icons/AddBox';
@@ -49,28 +48,35 @@ const tableIcons = {
   ThirdStateCheck: forwardRef((props, ref) => <Remove {...props} ref={ref} />),
   ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />)
 };
+
 const styles = theme => ({
 });
 
-class MeasurementView extends Component {
-  constructor() {
-    super();
+const getDateTime = () => {
+  const today = new Date();
+  const date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
+  const time = today.getHours() + "-" + today.getMinutes() + "-" + today.getSeconds();
 
-    this.state = {
-      useCase: "",
-      measurements: [],
+  return date + '_' + time;
+}
 
-      loading: true,
-      error: null,
-    };
-  }
+function MeasurementView(props) {
+  const { id } = useParams();
+  const [useCase, setUseCase] = useState("");
+  const [measurements, setMeasurements] = useState([]);
+  const [tableOutput, setTableOutput] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  componentDidMount() {
-    this.getMeasurements();
-  }
+  const title = "List measurements for " + useCase.name                              // define title of website
+  const exportFileName = "list_measurements_" + useCase.name + "_" + getDateTime()        // define export file name
 
-  async fetch(method, endpoint, body) {
-    this.setState({ loading: true })
+  useEffect(() => {
+    getMeasurements();
+  }, [id]);
+
+  const custom_fetch = async (method, endpoint, body) => {
+    setLoading(true);
 
     try {
       const response = await fetch(`${API}/api${endpoint}`, {
@@ -82,33 +88,29 @@ class MeasurementView extends Component {
         },
       });
 
-      this.setState({ loading: false })
+      setLoading(false);
 
       if (response.ok && (response.status === 201 || response.status === 200)) {
         return await response.json();
       } else {
         console.error(response.status)
-        this.setState({
-          error: { message: "Error when communicating with backend: " + response.statusText }
-        })
+        setError({ message: "Error when communicating with backend: " + response.statusText })
 
         throw new Error("Error communicating with backend")
       }
     } catch (error) {
       console.error(error);
 
-      this.setState({
-        error: error,
-        loading: false
-      });
+      setError(error)
+      setLoading(false);
     }
   }
 
-  async getMeasurements() {
-    const useCaseId = this.props.match.params.id
+  const getMeasurements = async () => {
+    const useCaseId = id
 
     // get use case and corresponding measurements
-    let useCase = (await this.fetch('get', '/usecases/' + useCaseId + "/measurements")) || []
+    let useCase = (await custom_fetch('get', '/usecases/' + useCaseId + "/measurements")) || []
     let measurements = useCase.Measurements
     let tableOutput = []
 
@@ -122,75 +124,57 @@ class MeasurementView extends Component {
         })
       })
 
-      this.setState({
-        useCase: useCase,
-        measurements: measurements,
-        tableOutput: tableOutput
-      });
+      setUseCase(useCase)
+      setMeasurements(tableOutput)
+      setTableOutput(tableOutput)
     }
   }
 
-  getDateTime() {
-    const today = new Date();
-    const date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
-    const time = today.getHours() + "-" + today.getMinutes() + "-" + today.getSeconds();
+  return (
+    <Fragment>
+      {measurements && measurements.length > 0 ? (
+        // data available, present table
+        <MaterialTable
+          icons={tableIcons}
+          title={title}
+          columns={[
+            { title: 'Use case', field: 'useCase', },
+            { title: 'Measurement group', field: 'groupName' },
+            { title: 'Measurement value', field: 'value' },
+            { title: 'Timestamp', field: 'timestamp' }
+          ]}
+          data={tableOutput}
+          options={{
+            exportFileName: exportFileName,
+            exportButton: true,
+            exportAllData: true,
+            filtering: true,
+            search: false,
+            pageSize: 5,
+            pageSizeOptions: [5, 10, 20, 50],
+          }}
+        />
+      ) : (
+        // no data available
+        !loading && (
+          <Typography variant="subtitle1">So far no measurements have been recorded for use case {useCase.name}</Typography>
+        )
+      )}
 
-    return date + '_' + time;
-  }
+      { /* Flag based display of error snackbar */}
+      {error && (
+        <ErrorSnackbar
+          onClose={() => setError(null)}
+          message={error.message}
+        />
+      )}
 
-  render() {
-    const title = "List measurements for " + this.state.useCase.name                              // define title of website
-    const exportFileName = "list_measurements_" + this.state.useCase.name + "_" + this.getDateTime()        // define export file name
-
-    return (
-      <Fragment>
-        {this.state.measurements.length > 0 ? (
-          // data available, present table
-          <MaterialTable
-            icons={tableIcons}
-            title={title}
-            columns={[
-              { title: 'Use case', field: 'useCase' },
-              { title: 'Measurement group', field: 'groupName' },
-              { title: 'Measurement value', field: 'value' },
-              { title: 'Timestamp', field: 'timestamp' }
-            ]}
-            data={this.state.tableOutput}
-            options={{
-              exportFileName: exportFileName,
-              exportButton: true,
-              exportAllData: true,
-              filtering: true,
-              search: false,
-              pageSize: 20,
-              pageSizeOptions: [20, 50, 100, 1000]
-            }}
-          />
-        ) : (
-          // no data available
-          !this.state.loading && (
-            <Typography variant="subtitle1">So far no measurements have been recorded for use case {this.state.useCase.name}</Typography>
-          )
-        )}
-
-        { /* Flag based display of error snackbar */}
-        {this.state.error && (
-          <ErrorSnackbar
-            onClose={() => this.setState({ error: null })}
-            message={this.state.error.message}
-          />
-        )}
-
-        { /* Flag based display of loadingbar */}
-        {this.state.loading && (
-          <LoadingBar />
-        )}
-      </Fragment>
-    );
-  }
+      { /* Flag based display of loadingbar */}
+      {loading && (
+        <LoadingBar />
+      )}
+    </Fragment>
+  );
 }
 
-export default compose(
-  withRouter,
-  withStyles(styles),
-)(MeasurementView);
+export default withStyles(styles)(MeasurementView);

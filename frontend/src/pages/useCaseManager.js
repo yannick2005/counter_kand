@@ -1,5 +1,5 @@
-import React, { Component, Fragment } from 'react';
-import { withRouter, Route, Redirect, Link } from 'react-router-dom';
+import React, { useEffect, useState, Fragment } from 'react';
+import { Link } from 'react-router-dom';
 import {
   withStyles,
   Typography,
@@ -15,8 +15,7 @@ import {
 import { Delete as DeleteIcon, Create as CreateIcon, Add as AddIcon } from '@material-ui/icons';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import moment from 'moment';
-import { find, orderBy, filter } from 'lodash';
-import { compose } from 'recompose';
+import { orderBy, filter } from 'lodash';
 
 import ReCAPTCHA from "react-google-recaptcha";
 import { captcha_site_key } from '../components/config';
@@ -48,38 +47,51 @@ const styles = theme => ({
     width: "100%",
   }
 });
-class UseCaseManager extends Component {
-  constructor() {
-    super();
 
-    this.state = {
-      captureValue: localStorage.getItem("captureValue") || "[empty]",
-      captureLoad: JSON.parse(localStorage.getItem("captureLoad")) || false,
-      captureExpired: JSON.parse(localStorage.getItem("captureExpired")),
+function UseCaseManager(props) {
+  const { classes } = props;
 
-      query: "",
-      useCases: [],
+  // captcha
+  const [captureValue, setCaptureValue] = useState(localStorage.getItem("captureValue") || "[empty]");
+  const [captureLoad, setCaptureLoad] = useState(JSON.parse(localStorage.getItem("captureLoad")) || false);
+  const [captureExpired, setCaptureExpired] = useState(JSON.parse(localStorage.getItem("captureExpired")) || true);
+  const _reCaptchaRef = React.createRef();
 
-      success: null,
-      loading: false,
-      error: null,
-    };
+  // use case
+  const [query, setQuery] = useState("");
+  const [useCases, setUseCases] = useState([]);
+  const [useCasesFiltered, setUseCasesFiltered] = useState([]);
 
-    this._reCaptchaRef = React.createRef();
-  }
+  // use case editor
+  const [useCase, setUseCase] = useState(null);
+  const [useCaseEditorOpen, setUseCaseEditorOpen] = useState(false);
+  const [useCaseEditorMode, setUseCaseEditorMode] = useState("create");
 
-  componentDidMount() {
+  // general
+  const [success, setSuccess] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
     // if captcha is empty execute the captcha query, prompt users some random pictures
-    if (this._reCaptchaRef.current &&
-      (this.state.captureExpired === null || this.state.captureExpired === false)) {
-      this._reCaptchaRef.current.execute()
+    if (_reCaptchaRef.current &&
+      (captureExpired === null || captureExpired === false)) {
+      _reCaptchaRef.current.execute()
     }
 
-    this.getUseCases();
-  }
+    getUseCases();
+  }, []);
 
-  async fetch(method, endpoint, body) {
-    this.setState({ loading: true })
+  useEffect(() => {
+    let filteredObjects = filter(useCases, function (obj) {
+      return obj.name.toUpperCase().includes(query.toUpperCase());
+    })
+
+    setUseCasesFiltered(filteredObjects);
+  }, [query, useCases]);
+
+  const custom_fetch = async (method, endpoint, body) => {
+    setLoading(true);
 
     try {
       const response = await fetch(`${API}/api${endpoint}`, {
@@ -91,246 +103,204 @@ class UseCaseManager extends Component {
         },
       });
 
-      this.setState({ loading: false })
+      setLoading(false);
 
       if (response.ok && (response.status === 201 || response.status === 200)) {
         return await response.json();
       } else {
         console.error(response.status)
-        this.setState({
-          error: { message: "Error when communicating with backend: " + response.statusText }
-        })
+        setError({ message: "Error when communicating with backend: " + response.statusText })
       }
     } catch (error) {
       console.error(error);
 
-      this.setState({
-        error: error,
-        loading: false
-      });
+      setError(error)
+      setLoading(false);
     }
   }
 
-  getUseCases() {
-    this.fetch('get', '/useCases')
+  const getUseCases = () => {
+    custom_fetch('get', '/useCases')
       .then(useCases => {
-        this.setState({
-          useCases: useCases || []
-        })
+        setUseCases(useCases);
       })
   }
 
-  onSaveUseCase = async (id, name, pinCode, measurementOptions) => {
-    var postData = {
+  const onSaveUseCase = async (id, name, pinCode, measurementOptions) => {
+    const postData = {
       name: name,
       pinCode: pinCode,
       measurementOptions: measurementOptions
     }
 
     if (id) {
-      await this.fetch('put', `/useCases/${id}`, postData);
+      await custom_fetch('put', `/useCases/${id}`, postData);
     } else {
-      await this.fetch('post', '/useCases', postData);
+      await custom_fetch('post', '/useCases', postData);
     }
 
-    this.getUseCases();
-    if (this.state.error === null) {
-      this.props.history.goBack();
+    getUseCases()
+
+    if (error === null) {
+      setUseCaseEditorOpen(false);
     }
   }
 
-  async deleteUseCase(useCase) {
-    var that = this
-
+  const deleteUseCase = async (useCase) => {
     if (window.confirm(`Are you sure you want to delete "${useCase.name}"`)) {
       // delete also all measurements
-      let measurements = await this.fetch('get', `/useCases/${useCase.id}/measurements`);
+      let measurements = await custom_fetch('get', `/useCases/${useCase.id}/measurements`);
 
-      this.fetch('delete', `/useCases/${useCase.id}`);
+      custom_fetch('delete', `/useCases/${useCase.id}`);
 
       measurements.measurementOptions.forEach(function (element) {
-        that.fetch('delete', `/measurements/${element.id}`);
+        custom_fetch('delete', `/measurements/${element.id}`);
       })
 
-      if (this.state.error === null) {
-        this.setState({
-          success: "Use case successfully deleted"
-        })
+      if (error === null) {
+        setSuccess("Use case successfully deleted")
       }
 
-      this.getUseCases();
+      getUseCases();
     }
   }
 
-  handleCaptchaChange = value => {
+  const handleCaptchaChange = value => {
     // if value is null recaptcha expired
     if (value === null) {
-      this.setState({
-        captureValue: value,
-        caputreExpired: true,
-        captureLoad: true
-      });
+      setCaptureValue("[empty]");
+      setCaptureLoad(true)
+      setCaptureExpired(true)
     } else {
-      this.setState({
-        captureValue: value,
-        captureExpired: false,
-        captureLoad: true
-      }, () => {
-        // store the captcha values in the local storage so that after reload they are not requested again
-        localStorage.setItem("captureValue", value)
-        localStorage.setItem("captureExpired", false)
-        localStorage.setItem("captureLoad", true)
-      })
+      setCaptureValue(value);
+      setCaptureLoad(true)
+      setCaptureExpired(false)
+
+      localStorage.setItem("captureValue", value)
+      localStorage.setItem("captureLoad", true)
+      localStorage.setItem("captureExpired", false)
     }
   };
 
-  handleSearchChange = evt => {
-    this.setState({
-      query: evt.target.value
-    });
+  const handleSearchChange = evt => {
+    setQuery(evt.target.value);
   };
 
-  renderUseCaseEditor = ({ match }) => {
-    let id = match.params.id
-    let useCase = find(this.state.useCases, { id: Number(id) });
-
-    if ((!useCase && match.path.includes("copy")) || (!useCase && id !== 'new')) {
-      return <Redirect to="/useCases" />
-    }
-
-    // reset useCaseId if copying usecase
-    // create new object
-    if (match.path.includes("copy")) {
-      useCase = Object.create(useCase)
-      useCase.name = useCase.name + " (Copy)"
-    }
-
-    return (
-      <UseCaseEditor
-        useCase={useCase}
-        errorMessage={this.state.error}
-        onSave={this.onSaveUseCase}
-      />
-    )
+  const handleEditorOpen = (useCase, mode) => {
+    setUseCase(useCase);
+    setUseCaseEditorMode(mode);
+    setUseCaseEditorOpen(true);
   };
 
-  render() {
-    const { classes } = this.props;
-    const that = this
-    let useCases = filter(this.state.useCases, function (obj) {
-      return obj.name.toUpperCase().includes(that.state.query.toUpperCase());
-    })
+  return (
+    <Fragment>
+      <Typography variant="h4">Use Cases</Typography>
+      { /* captcha section */}
+      {(captureExpired === null || captureExpired === true) && (captcha_site_key) &&
+        <ReCAPTCHA
+          ref={_reCaptchaRef}
+          sitekey={captcha_site_key}
+          size="invisible"
+          onChange={handleCaptchaChange}
+        />
+      }
 
-    return (
+      { /* use case area */}
+      {useCases && useCases.length > 0 ? (
+        // usecases available
+        <Paper elevation={1} className={classes.useCaseDiv}>
+          <div className={classes.serachDiv}>
+            <TextField
+              required
+              type="text"
+              key="inputQuery"
+              placeholder="Search"
+              label="Search"
+              className={classes.searchInput}
+              value={query}
+              onChange={handleSearchChange}
+              variant="outlined"
+              size="small"
+              autoFocus
+            />
+          </div>
+
+          <List>
+            {orderBy(useCasesFiltered, ['updatedAt', 'name'], ['desc', 'asc']).map(useCase => (
+              <ListItem key={useCase.id} button component={Link} to={`/useCases/${useCase.id}/measurements`}>
+                <ListItemText
+                  primary={useCase.name}
+                  secondary={useCase.updatedAt && `Updated ${moment(useCase.updatedAt).fromNow()}`}
+                />
+                <ListItemSecondaryAction>
+                  <IconButton component={Link} onClick={() => handleEditorOpen(useCase, "copy")} color="inherit">
+                    <FileCopyIcon />
+                  </IconButton>
+                  <IconButton component={Link} onClick={() => handleEditorOpen(useCase, "edit")} color="inherit">
+                    <CreateIcon />
+                  </IconButton>
+                  <IconButton onClick={() => deleteUseCase(useCase)} color="inherit">
+                    <DeleteIcon />
+                  </IconButton>
+                </ListItemSecondaryAction>
+              </ListItem>
+            ))}
+          </List>
+        </Paper>
+
+
+      ) : (
+        // no usecases available
+        !loading && (
+          <Typography variant="subtitle1">So far no use cases have been created</Typography>
+        )
+      )}
+
       <Fragment>
-        <Typography variant="h4">Use Cases</Typography>
-        { /* captcha section */}
-        {(this.state.captureExpired === null || this.state.captureExpired === true) && (captcha_site_key) &&
-          <ReCAPTCHA
-            ref={this._reCaptchaRef}
-            sitekey={captcha_site_key}
-            size="invisible"
-            onChange={this.handleCaptchaChange}
-          />
-        }
-
-        { /* use case area */}
-        {this.state.useCases.length > 0 ? (
-          // usecases available
-          <Paper elevation={1} className={classes.useCaseDiv}>
-            <div className={classes.serachDiv}>
-              <TextField
-                required
-                type="text"
-                key="inputQuery"
-                placeholder="Search"
-                label="Search"
-                className={classes.searchInput}
-                value={this.state.query}
-                onChange={this.handleSearchChange}
-                variant="outlined"
-                size="small"
-                autoFocus
-              />
-            </div>
-
-            <List>
-              {orderBy(useCases, ['updatedAt', 'name'], ['desc', 'asc']).map(useCase => (
-                <ListItem key={useCase.id} button component={Link} to={`/useCases/${useCase.id}/measurements`}>
-                  <ListItemText
-                    primary={useCase.name}
-                    secondary={useCase.updatedAt && `Updated ${moment(useCase.updatedAt).fromNow()}`}
-                  />
-                  {(this.state.captureExpired !== null && this.state.captureExpired === false) && (
-                    <ListItemSecondaryAction>
-                      <IconButton component={Link} to={`/useCases/${useCase.id}/copy`} color="inherit">
-                        <FileCopyIcon />
-                      </IconButton>
-                      <IconButton component={Link} to={`/useCases/${useCase.id}/edit`} color="inherit">
-                        <CreateIcon />
-                      </IconButton>
-                      <IconButton onClick={() => this.deleteUseCase(useCase)} color="inherit">
-                        <DeleteIcon />
-                      </IconButton>
-                    </ListItemSecondaryAction>
-                  )}
-                </ListItem>
-              ))}
-
-              { /* must be placed here so that the state is correctly loaded */}
-              <Route exact path="/useCases/:id/edit" render={this.renderUseCaseEditor} />
-              <Route exact path="/useCases/:id/copy" render={this.renderUseCaseEditor} />
-            </List>
-          </Paper>
-
-
-        ) : (
-          // no usecases available
-          !this.state.loading && (
-            <Typography variant="subtitle1">So far no use cases have been created</Typography>
-          )
-        )}
-
-        <Fragment>
-          <Fab
-            color="secondary"
-            aria-label="add"
-            className={classes.fab}
-            component={Link}
-            to="/useCases/new"
-          >
-            <AddIcon />
-          </Fab>
-
-          <Route exact path="/useCases/:id" render={this.renderUseCaseEditor} />
-        </Fragment>
-
-        { /* Flag based display of loadingbar */}
-        {this.state.loading && (
-          <LoadingBar />
-        )}
-
-        { /* Flag based display of error snackbar */}
-        {this.state.error && (
-          <ErrorSnackbar
-            onClose={() => this.setState({ error: null })}
-            message={this.state.error.message}
-          />
-        )}
-
-        { /* Flag based display of info snackbar */}
-        {this.state.success && (
-          <InfoSnackbar
-            onClose={() => this.setState({ success: null })}
-            message={this.state.success}
-          />
-        )}
+        <Fab
+          color="secondary"
+          aria-label="add"
+          className={classes.fab}
+          component={Link}
+          onClick={() => { handleEditorOpen(null, 'create') }}
+        >
+          <AddIcon />
+        </Fab>
       </Fragment>
-    );
-  }
+
+      { /* Use Case Editor */}
+      {useCaseEditorOpen && (
+        <UseCaseEditor
+          useCase={useCase}
+          useCaseEditorMode={useCaseEditorMode}
+          errorMessage={error}
+          onSave={onSaveUseCase}
+          onClose={() => { setUseCaseEditorOpen(false) }}
+        />
+      )}
+
+      { /* Flag based display of loadingbar */}
+      {loading && (
+        <LoadingBar />
+      )}
+
+      { /* Flag based display of error snackbar */}
+      {error && (
+        <ErrorSnackbar
+          onClose={() => setError(null)}
+          message={error.message}
+        />
+      )}
+
+      { /* Flag based display of info snackbar */}
+      {success && (
+        <InfoSnackbar
+          onClose={() => setSuccess(null)}
+          message={success}
+        />
+      )}
+    </Fragment>
+  );
 }
 
-export default compose(
-  withRouter,
-  withStyles(styles),
-)(UseCaseManager);
+export default withStyles(styles)(UseCaseManager);

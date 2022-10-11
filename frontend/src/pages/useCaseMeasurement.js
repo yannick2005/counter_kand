@@ -1,11 +1,10 @@
-import React, { Component, Fragment } from 'react';
-import { withRouter } from 'react-router-dom';
+import React, { useState, Fragment, useEffect } from 'react';
 import {
   withStyles,
   Typography,
   Grid
 } from '@material-ui/core';
-import { compose } from 'recompose';
+import { useParams, useLocation } from 'react-router-dom';
 
 import ActionItems from '../components/actionItems';
 import ErrorSnackbar from '../components/errorSnackbar';
@@ -29,62 +28,57 @@ const styles = theme => ({
   }
 });
 
-class UseCaseMeasurement extends Component {
-  constructor() {
-    super();
+function UseCaseMeasurement(props) {
+  const { classes } = props;
 
-    this.state = {
-      useCaseId: '',
-      useCaseDetails: '',
-      measurementsCount: 0,
-      lastMeasurementId: "",
-      pinCode: null,
-      displayText: true,
+  // use case
+  const [useCaseId, setUseCaseId] = useState("");
+  const [useCaseDetails, setUseCaseDetails] = useState('');
+  const [measurementsCount, setMeasurementsCount] = useState(0);
+  const [lastMeasurementId, setLastMeasurementId] = useState("");
+  const [pinCode, setPinCode] = useState(null);
 
-      success: null,
-      error: null,
-      loading: false,
-      connectivityIssue: false,
-    };
+  // general
+  const [displayText, setDisplayText] = useState(true);
+  const [success, setSuccess] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [connectivityIssue, setConnectivityIssue] = useState(false);
 
-    this.saveMeasurement = this.saveMeasurement.bind(this)
-    this.deleteLastMeasurement = this.deleteLastMeasurement.bind(this)
-    this.shareLink = this.shareLink.bind(this)
-    this.toogleIconView = this.toogleIconView.bind(this)
-  }
+  const { id } = useParams();
+  const location = useLocation();
 
-  componentDidMount = () => {
-    const useCaseId = this.props.match.params.id;
+  useEffect(() => {
+    const useCaseId = id;
     let body = {
-      pinCode: this.state.pinCode
+      pinCode: pinCode
     }
 
-    body.pinCode = new URLSearchParams(this.props.location.search).get("pinCode")
+    body.pinCode = new URLSearchParams(location).get("pinCode")
     if (!body.pinCode) {
       body.pinCode = prompt("Please provide the secure pincode of this use case to access the measurement area")
     }
 
-    this.setState({
-      pinCode: body.pinCode
-    })
+    setPinCode(body.pinCode)
 
     // check if correct pin has been provided
-    this.fetch('post', '/useCases/' + useCaseId + '/authorize', body)
+    custom_fetch('post', '/useCases/' + useCaseId + '/authorize', body)
       .then(response => {
         // if succesfully set useCase ID and load cases, otherwise show error
-        this.setState({
-          useCaseId: useCaseId
-        }, this.getUseCase)
+        setUseCaseId(useCaseId);
       })
       .catch(error => {
-        this.setState({
-          error: { message: "Wrong pinCode provide there for no access granted" }
-        })
+        setError({ message: "Wrong pinCode provide there for no access granted" })
       })
-  }
+  }, []);
 
-  async fetch(method, endpoint, body, surpressError) {
-    this.setState({ loading: true })
+  useEffect(() => {
+    getUseCase()
+  }, [useCaseId]);
+
+
+  const custom_fetch = async (method, endpoint, body, surpressError) => {
+    setLoading(true);
 
     try {
       const response = await fetch(`${API}/api${endpoint}`, {
@@ -96,24 +90,20 @@ class UseCaseMeasurement extends Component {
         },
       });
 
-      this.setState({ loading: false })
+      setLoading(false);
 
       if (response.ok && (response.status === 201 || response.status === 200)) {
         return await response.json();
       } else {
-        this.setState({
-          error: { message: "Error when communicating with backend: " + response.statusText }
-        })
+        setError({ message: "Error when communicating with backend: " + response.statusText })
 
         throw new Error("Error communicating with backend")
       }
     } catch (error) {
       // used to surpress the error notifcation
       if (!surpressError) {
-        this.setState({
-          error: error,
-          loading: false,
-        });
+        setError(error)
+        setLoading(false);
       }
 
       throw new Error(error)
@@ -122,116 +112,94 @@ class UseCaseMeasurement extends Component {
 
   // recursive extension of the fetch method
   // allows to reexecute failed fetch calls until they succeded
-  async fetch_retry(method, endpoint, body) {
+  const fetch_retry = async (method, endpoint, body) => {
     let error = null
 
     try {
-      return await this.fetch(method, endpoint, body, true)
+      return await custom_fetch(method, endpoint, body, true)
     }
     catch (err) {
       error = err
       // retry after some wait period, and update state if not already done
-      if (!this.state.connectivityIssue) {
-        this.setState({
-          connectivityIssue: true,
-          error: { message: "Error when communicating with backend. We are continuously trying it and will inform you as soon as the connection has ben reestablished. The measurements are still being saved locally and synchronized as soon as connection is present again." }
-        })
+      if (!connectivityIssue) {
+        setConnectivityIssue(true)
+        setError({ message: "Error when communicating with backend. We are continuously trying it and will inform you as soon as the connection has ben reestablished. The measurements are still being saved locally and synchronized as soon as connection is present again." })
       }
 
-      await this.sleep(REXECUTION_TIMEOUT)
-      return this.fetch_retry(method, endpoint, body)
+      await sleep(REXECUTION_TIMEOUT)
+      return fetch_retry(method, endpoint, body)
     }
     finally {
       // if err
-      if (!error && this.state.connectivityIssue) {
-        this.setState({
-          connectivityIssue: false,
-          success: "Connection established again. Now syncing your measurements. Check the above measurement counter."
-        })
+      if (!error && connectivityIssue) {
+        setConnectivityIssue(false)
+        setSuccess("Connection established again. Now syncing your measurements. Check the above measurement counter.")
       }
     }
-
   }
 
   // function which sleeps some defined milliseconds
-  sleep(ms) {
+  const sleep = (ms) => {
     return new Promise(resolve => setTimeout(resolve, ms))
   }
 
-  async getMeasurementsCount() {
-    let measurementsCount = await this.fetch('get', '/useCases/' + this.state.useCaseId + '/measurements/count')
+  const getMeasurementsCount = async () => {
+    let measurementsCount = []
+    if (useCaseId) measurementsCount = await custom_fetch('get', '/useCases/' + useCaseId + '/measurements/count')
 
-    this.setState({
-      measurementsCount: measurementsCount || 0
-    });
+    setMeasurementsCount(measurementsCount)
   }
 
-  async getUseCase() {
-    this.setState({
-      useCaseDetails: (await this.fetch('get', '/useCases/' + this.state.useCaseId)) || []
-    })
-
-    this.getMeasurementsCount()
+  const getUseCase = async () => {
+    setUseCaseDetails((await custom_fetch('get', '/useCases/' + useCaseId)) || [])
+    getMeasurementsCount()
   }
 
-  async deleteLastMeasurement() {
+  const deleteLastMeasurement = async () => {
     //only allowed to delete the last measurement by themselves
-    if (this.state.lastMeasurementId) {
-      await this.fetch("DELETE", "/measurements/" + this.state.lastMeasurementId)
+    if (lastMeasurementId) {
+      await custom_fetch("DELETE", "/measurements/" + lastMeasurementId)
 
-      this.getMeasurementsCount()
-      this.setState({
-        lastMeasurementId: "",
-        success: "Your last measurement was successfully deleted"
-      })
+      getMeasurementsCount()
+      setLastMeasurementId("")
+      setSuccess("Your last measurement was successfully deleted")
     } else {
-      this.setState({
-        error: {
-          message: "You can only delete your own last measurement, please execute a measurement first"
-        }
-      })
+      setError({ message: "You can only delete your own last measurement, please execute a measurement first" })
     }
   }
 
-  async saveMeasurement(groupName, buttonValue) {
-    let postData = {
-      "useCase": this.state.useCaseId,
+  const saveMeasurement = async (groupName, buttonValue) => {
+    const postData = {
+      "useCase": useCaseId,
       "groupName": groupName,
       "timestamp": Date.now(),      // set measurement time in frontend
       "value": buttonValue
     }
 
     // post data as long till it is successfull
-    await this.fetch_retry('post', `/measurements/`, postData)
+    await fetch_retry('post', `/measurements/`, postData)
       .then(response => {
-        this.setState({
-          lastMeasurementId: response.id
-        })
-
-        this.getMeasurementsCount()
+        setLastMeasurementId(response.id)
+        getMeasurementsCount()
       })
   }
 
   // copy the direct link to a use case measurement to the clipboard
   // the link includes the PIN code
-  shareLink() {
-    let url = window.location.href + "?pinCode=" + this.state.pinCode
+  const shareLink = () => {
+    let url = window.location.href + "?pinCode=" + pinCode
     navigator.clipboard.writeText(url)
 
-    this.setState({
-      success: "Direct link copied to clipboard"
-    })
+    setSuccess("Direct link copied to clipboard")
   }
 
   // toogle if text should be displayed or not
-  toogleIconView() {
-    this.setState({
-      displayText: !this.state.displayText
-    })
+  const toogleIconView = () => {
+    setDisplayText(!displayText)
   }
 
   // toogle full screen
-  toggleFullscreen() {
+  const toggleFullscreen = () => {
     let elem = document.querySelector("body");
 
     if (!document.fullscreenElement) {
@@ -243,86 +211,81 @@ class UseCaseMeasurement extends Component {
     }
   }
 
-  render() {
-    const { classes } = this.props;
-    let that = this
+  console.log(useCaseDetails)
 
-    return (
-      <Fragment>
-        <Typography className={classes.title} variant="h6">Measurements {this.state.useCaseDetails.name} </Typography>
+  return (
+    <Fragment>
+      <Typography className={classes.title} variant="h6">Measurements {useCaseDetails.name} </Typography>
 
-        { /* action items */}
-        <ActionItems
-          toggleFullscreen={this.toggleFullscreen}
-          toogleIconView={this.toogleIconView}
-          shareLink={this.shareLink}
-          deleteLastMeasurement={this.deleteLastMeasurement}
-          measurementsCount={this.state.measurementsCount}
-          useCaseId={this.state.useCaseId}
-        />
+      { /* action items */}
+      <ActionItems
+        toggleFullscreen={toggleFullscreen}
+        toogleIconView={toogleIconView}
+        shareLink={shareLink}
+        deleteLastMeasurement={deleteLastMeasurement}
+        measurementsCount={measurementsCount}
+        useCaseId={useCaseId}
+      />
 
-        {this.state.useCaseDetails !== "" ? (
-          // measurements present
+      {useCaseDetails && useCaseDetails.measurementOptions && useCaseDetails.measurementOptions.length > 0 ? (
+        // measurements present
 
-          this.state.useCaseDetails.measurementOptions.map(function (groupElement, groupIndex, groupArray) {
-            // iteration for groups
+        useCaseDetails.measurementOptions.map(function (groupElement, groupIndex, groupArray) {
+          // iteration for groups
 
-            let buttons = groupElement.options.map(function (optionElement, opionIndex, optionsArray) {
-              // iteration for buttons
-
-              return (
-                <Grid item xs>
-                  <MeasurementButtons
-                    onClick={that.saveMeasurement}
-                    key={`${opionIndex}-${optionElement.name}`}
-                    groupName={groupElement.name}
-                    buttonValue={optionElement}
-                    length={optionsArray.length}
-                    groupLength={groupArray.length}
-                    displayText={that.state.displayText}
-                  />
-                </Grid>
-              )
-            })
+          let buttons = groupElement.options.map(function (optionElement, opionIndex, optionsArray) {
+            // iteration for buttons
 
             return (
-              <div className={classes.root} key={`${groupIndex}buttonList`}>
-                <Typography className={classes.measurementGroupTitle}>{groupElement.name}</Typography>
-                <Grid container spacing={1}>
-                  {buttons}
-                </Grid>
-              </div>
+              <Grid item xs key={opionIndex}>
+                <MeasurementButtons
+                  onClick={saveMeasurement}
+                  key={`${opionIndex}-${optionElement.name}`}
+                  groupName={groupElement.name}
+                  buttonValue={optionElement.name}
+                  length={optionsArray.length}
+                  groupLength={groupArray.length}
+                  displayText={displayText}
+                  icon={optionElement.icon}
+                />
+              </Grid>
             )
           })
 
-        ) : (
-          // no measurements could be found
-          !this.state.loading && (
-            <Typography variant="subtitle1">No measurements have been taken so far</Typography>
+          return (
+            <div className={classes.root} key={`${groupIndex}buttonList`}>
+              <Typography className={classes.measurementGroupTitle}>{groupElement.name}</Typography>
+              <Grid container spacing={1}>
+                {buttons}
+              </Grid>
+            </div>
           )
-        )}
+        })
 
-        { /* Flag based display of error snackbar */}
-        {this.state.error && (
-          <ErrorSnackbar
-            onClose={() => this.setState({ error: null })}
-            message={this.state.error.message}
-          />
-        )}
+      ) : (
+        // no measurements could be found
+        !loading && (
+          <Typography variant="subtitle1">No measurements have been taken so far</Typography>
+        )
+      )}
 
-        { /* Flag based display of info snackbar */}
-        {this.state.success && (
-          <InfoSnackbar
-            onClose={() => this.setState({ success: null })}
-            message={this.state.success}
-          />
-        )}
-      </Fragment>
-    );
-  }
+      { /* Flag based display of error snackbar */}
+      {error && (
+        <ErrorSnackbar
+          onClose={() => setError(null)}
+          message={error.message}
+        />
+      )}
+
+      { /* Flag based display of info snackbar */}
+      {success && (
+        <InfoSnackbar
+          onClose={() => setSuccess(null)}
+          message={success}
+        />
+      )}
+    </Fragment>
+  );
 }
 
-export default compose(
-  withRouter,
-  withStyles(styles),
-)(UseCaseMeasurement);
+export default withStyles(styles)(UseCaseMeasurement);

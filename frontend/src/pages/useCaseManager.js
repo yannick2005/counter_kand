@@ -1,5 +1,5 @@
 import React, { useEffect, useState, Fragment } from 'react';
-import { Route, Navigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   withStyles,
   Typography,
@@ -15,7 +15,7 @@ import {
 import { Delete as DeleteIcon, Create as CreateIcon, Add as AddIcon } from '@material-ui/icons';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import moment from 'moment';
-import { find, orderBy, filter } from 'lodash';
+import { orderBy, filter } from 'lodash';
 
 import ReCAPTCHA from "react-google-recaptcha";
 import { captcha_site_key } from '../components/config';
@@ -51,19 +51,26 @@ const styles = theme => ({
 function UseCaseManager(props) {
   const { classes } = props;
 
+  // captcha
   const [captureValue, setCaptureValue] = useState(localStorage.getItem("captureValue") || "[empty]");
   const [captureLoad, setCaptureLoad] = useState(JSON.parse(localStorage.getItem("captureLoad")) || false);
   const [captureExpired, setCaptureExpired] = useState(JSON.parse(localStorage.getItem("captureExpired")) || true);
+  const _reCaptchaRef = React.createRef();
 
+  // use case
   const [query, setQuery] = useState("");
   const [useCases, setUseCases] = useState([]);
   const [useCasesFiltered, setUseCasesFiltered] = useState([]);
 
+  // use case editor
+  const [useCase, setUseCase] = useState(null);
+  const [useCaseEditorOpen, setUseCaseEditorOpen] = useState(false);
+  const [useCaseEditorMode, setUseCaseEditorMode] = useState("create");
+
+  // general
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  const _reCaptchaRef = React.createRef();
 
   useEffect(() => {
     // if captcha is empty execute the captcha query, prompt users some random pictures
@@ -83,7 +90,7 @@ function UseCaseManager(props) {
     setUseCasesFiltered(filteredObjects);
   }, [query, useCases]);
 
-  const fetch = async (method, endpoint, body) => {
+  const custom_fetch = async (method, endpoint, body) => {
     setLoading(true);
 
     try {
@@ -113,7 +120,7 @@ function UseCaseManager(props) {
   }
 
   const getUseCases = () => {
-    fetch('get', '/useCases')
+    custom_fetch('get', '/useCases')
       .then(useCases => {
         setUseCases(useCases);
       })
@@ -127,31 +134,31 @@ function UseCaseManager(props) {
     }
 
     if (id) {
-      await fetch('put', `/useCases/${id}`, postData);
+      await custom_fetch('put', `/useCases/${id}`, postData);
     } else {
-      await fetch('post', '/useCases', postData);
+      await custom_fetch('post', '/useCases', postData);
     }
 
     getUseCases()
 
     if (error === null) {
-      props.history.goBack();
+      setUseCaseEditorOpen(false);
     }
   }
 
   const deleteUseCase = async (useCase) => {
     if (window.confirm(`Are you sure you want to delete "${useCase.name}"`)) {
       // delete also all measurements
-      let measurements = await fetch('get', `/useCases/${useCase.id}/measurements`);
+      let measurements = await custom_fetch('get', `/useCases/${useCase.id}/measurements`);
 
-      fetch('delete', `/useCases/${useCase.id}`);
+      custom_fetch('delete', `/useCases/${useCase.id}`);
 
       measurements.measurementOptions.forEach(function (element) {
-        fetch('delete', `/measurements/${element.id}`);
+        custom_fetch('delete', `/measurements/${element.id}`);
       })
 
       if (error === null) {
-        setSuccess({ success: "Use case successfully deleted" })
+        setSuccess("Use case successfully deleted")
       }
 
       getUseCases();
@@ -179,28 +186,10 @@ function UseCaseManager(props) {
     setQuery(evt.target.value);
   };
 
-  const renderUseCaseEditor = ({ match }) => {
-    let id = match.params.id
-    let useCase = find(useCases, { id: Number(id) });
-
-    if ((!useCase && match.path.includes("copy")) || (!useCase && id !== 'new')) {
-      return <Navigate to="/useCases" />
-    }
-
-    // reset useCaseId if copying usecase
-    // create new object
-    if (match.path.includes("copy")) {
-      useCase = Object.create(useCase)
-      useCase.name = useCase.name + " (Copy)"
-    }
-
-    return (
-      <UseCaseEditor
-        useCase={useCase}
-        errorMessage={error}
-        onSave={onSaveUseCase}
-      />
-    )
+  const handleEditorOpen = (useCase, mode) => {
+    setUseCase(useCase);
+    setUseCaseEditorMode(mode);
+    setUseCaseEditorOpen(true);
   };
 
   return (
@@ -217,7 +206,7 @@ function UseCaseManager(props) {
       }
 
       { /* use case area */}
-      {useCases.length > 0 ? (
+      {useCases && useCases.length > 0 ? (
         // usecases available
         <Paper elevation={1} className={classes.useCaseDiv}>
           <div className={classes.serachDiv}>
@@ -237,31 +226,25 @@ function UseCaseManager(props) {
           </div>
 
           <List>
-            {orderBy(useCases, ['updatedAt', 'name'], ['desc', 'asc']).map(useCase => (
+            {orderBy(useCasesFiltered, ['updatedAt', 'name'], ['desc', 'asc']).map(useCase => (
               <ListItem key={useCase.id} button component={Link} to={`/useCases/${useCase.id}/measurements`}>
                 <ListItemText
                   primary={useCase.name}
                   secondary={useCase.updatedAt && `Updated ${moment(useCase.updatedAt).fromNow()}`}
                 />
-                {(captureExpired !== null && captureExpired === false) && (
-                  <ListItemSecondaryAction>
-                    <IconButton component={Link} to={`/useCases/${useCase.id}/copy`} color="inherit">
-                      <FileCopyIcon />
-                    </IconButton>
-                    <IconButton component={Link} to={`/useCases/${useCase.id}/edit`} color="inherit">
-                      <CreateIcon />
-                    </IconButton>
-                    <IconButton onClick={() => deleteUseCase(useCase)} color="inherit">
-                      <DeleteIcon />
-                    </IconButton>
-                  </ListItemSecondaryAction>
-                )}
+                <ListItemSecondaryAction>
+                  <IconButton component={Link} onClick={() => handleEditorOpen(useCase, "copy")} color="inherit">
+                    <FileCopyIcon />
+                  </IconButton>
+                  <IconButton component={Link} onClick={() => handleEditorOpen(useCase, "edit")} color="inherit">
+                    <CreateIcon />
+                  </IconButton>
+                  <IconButton onClick={() => deleteUseCase(useCase)} color="inherit">
+                    <DeleteIcon />
+                  </IconButton>
+                </ListItemSecondaryAction>
               </ListItem>
             ))}
-
-            { /* must be placed here so that the state is correctly loaded */}
-            <Route exact path="/useCases/:id/edit" render={renderUseCaseEditor} />
-            <Route exact path="/useCases/:id/copy" render={renderUseCaseEditor} />
           </List>
         </Paper>
 
@@ -279,13 +262,22 @@ function UseCaseManager(props) {
           aria-label="add"
           className={classes.fab}
           component={Link}
-          to="/useCases/new"
+          onClick={() => { handleEditorOpen(null, 'create') }}
         >
           <AddIcon />
         </Fab>
-
-        <Route exact path="/useCases/:id" render={renderUseCaseEditor} />
       </Fragment>
+
+      { /* Use Case Editor */}
+      {useCaseEditorOpen && (
+        <UseCaseEditor
+          useCase={useCase}
+          useCaseEditorMode={useCaseEditorMode}
+          errorMessage={error}
+          onSave={onSaveUseCase}
+          onClose={() => { setUseCaseEditorOpen(false) }}
+        />
+      )}
 
       { /* Flag based display of loadingbar */}
       {loading && (
@@ -295,7 +287,7 @@ function UseCaseManager(props) {
       { /* Flag based display of error snackbar */}
       {error && (
         <ErrorSnackbar
-          onClose={() => setError({ error: null })}
+          onClose={() => setError(null)}
           message={error.message}
         />
       )}
@@ -303,7 +295,7 @@ function UseCaseManager(props) {
       { /* Flag based display of info snackbar */}
       {success && (
         <InfoSnackbar
-          onClose={() => setSuccess({ success: null })}
+          onClose={() => setSuccess(null)}
           message={success}
         />
       )}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   TextField,
   withStyles,
@@ -15,8 +15,10 @@ import AddIcon from '@material-ui/icons/Add';
 import SaveAltIcon from '@material-ui/icons/SaveAlt';
 import ClearIcon from '@material-ui/icons/Clear';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
+
 import './utensils'
 import MeasurementOptions from './measurementOptions'
+import { deepCopy } from './utensils';
 
 const styles = theme => ({
   modal: {
@@ -49,12 +51,27 @@ const styles = theme => ({
 });
 
 function UseCaseditor(props) {
-  const { classes, history, errorMessage, onSave } = props;
+  const { classes, useCase, useCaseEditorMode, errorMessage, onSave, onClose } = props;
 
-  const [id, setId] = useState(props.id);
-  const [name, setName] = useState(props.name);
-  const [pinCode, setPinCode] = useState(props.pinCode);
-  const [measurementOptions, setMeasurementOptions] = useState(props.measurementOptions);
+  const [id, setId] = useState(0);
+  const [name, setName] = useState("");
+  const [pinCode, setPinCode] = useState("");
+  const [measurementOptions, setMeasurementOptions] = useState([]);
+
+  useEffect(() => {
+    if (useCaseEditorMode === "edit") {
+      setId(useCase.id);
+      setName(useCase.name);
+      setMeasurementOptions(useCase.measurementOptions);
+    } else if (useCaseEditorMode === "copy") {
+      let newUseCase = deepCopy(useCase)
+      newUseCase.name = newUseCase.name + " (Copy)"
+
+      setId(null);
+      setName("Copy " + newUseCase.name);
+      setMeasurementOptions(newUseCase.measurementOptions);
+    }
+  }, [useCase, useCaseEditorMode]);
 
   // called by child MeasurementOptions when change of input
   const handleOptionChange = function (groupIndex, options) {
@@ -73,10 +90,9 @@ function UseCaseditor(props) {
   };
 
   const handleOptionGroupName = (index, event) => {
-    let measurementOptions = measurementOptions
-
-    measurementOptions[index].name = event.target.value
-    setMeasurementOptions(measurementOptions)
+    let tempMeasurementOptions = deepCopy(measurementOptions)
+    tempMeasurementOptions[index].name = event.target.value
+    setMeasurementOptions(tempMeasurementOptions)
   }
 
   const handleChange = (evt) => {
@@ -107,20 +123,17 @@ function UseCaseditor(props) {
   };
 
   const handleCopyOptionGroup = idx => () => {
-    let measurementOptions = measurementOptions
-    let newMeasurementOption = { ...measurementOptions[idx] }
-    newMeasurementOption.id = measurementOptions.length
-
-    measurementOptions.insert(idx, newMeasurementOption)
-
-    setMeasurementOptions(measurementOptions)
+    let tempMeasurementOptions = measurementOptions
+    let newMeasurementOption = { ...tempMeasurementOptions[idx] }
+    newMeasurementOption.id = tempMeasurementOptions.length
+    tempMeasurementOptions.insert(idx, newMeasurementOption)
+    setMeasurementOptions(tempMeasurementOptions)
   }
-
 
   return (
     <Modal
       className={classes.modal}
-      onClose={() => history.goBack()}
+      onClose={() => onClose()}
       open
     >
       <Card className={classes.modalCard}>
@@ -156,8 +169,7 @@ function UseCaseditor(props) {
             />
 
             <Typography variant="subtitle1" >Measurement Options</Typography>
-
-            {measurementOptions.map(function (element, index) {
+            {measurementOptions && measurementOptions.length > 0 && measurementOptions.map(function (element, index) {
               return (
                 <FormGroup key={`formgroup-${index}`} className={classes.formGroup}>
                   <TextField
@@ -204,7 +216,7 @@ function UseCaseditor(props) {
           <CardActions>
             <Button size="small" color="primary" type="submit"><SaveAltIcon />Save</Button>
             <Button size="small" color="primary" onClick={handleAddOptionGroup}><AddIcon />Add Option Group</Button>
-            <Button size="small" onClick={() => history.goBack()}><ClearIcon />Cancel</Button>
+            <Button size="small" onClick={onClose}><ClearIcon />Cancel</Button>
           </CardActions>
         </form>
       </Card>

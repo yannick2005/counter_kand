@@ -42,7 +42,6 @@ function AppHeader(props) {
     setShowHelp(!showHelp)
   }
 
-
   return (
     <AppBar position="static">
       <Toolbar className={classes.toolBar}>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   withStyles,
   Button,
@@ -19,9 +19,16 @@ const styles = theme => ({
 
 function MeasurementButton(props) {
   const { classes, displayText } = props;
-  const [groupName, setGroupName] = useState(props.groupName);
-  const [buttonValue, setButtonValue] = useState(props.buttonValue);
-  const [icon, setIcon] = useState(props.icon);
+
+  const [groupName, setGroupName] = useState("");
+  const [buttonValue, setButtonValue] = useState("");
+  const [icon, setIcon] = useState("");
+
+  useEffect(() => {
+    setGroupName(props.groupName);
+    setButtonValue(props.buttonValue);
+    setIcon(props.icon);
+  }, [props.groupName, props.buttonValue, props.icon]);
 
   const handleButtonPress = () => {
     const { onClick } = props

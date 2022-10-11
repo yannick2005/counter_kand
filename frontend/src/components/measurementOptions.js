@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   TextField,
   withStyles,
@@ -32,9 +32,15 @@ const ICONS = ["", "arrow_back", "arrow_forward", "arrow_upward", "arrow_downwar
 function MeasurementOptions(props) {
   const { classes } = props;
 
-  const [options, setOptions] = useState(props.options);
-  const [name, setName] = useState(props.name);
-  const [id, setId] = useState(props.id);
+  const [options, setOptions] = useState([]);
+  const [name, setName] = useState("");
+  const [id, setId] = useState(0);
+
+  useEffect(() => {
+    setOptions(props.options);
+    setName(props.name);
+    setId(props.id);
+  }, [props.options, props.name, props.id]);
 
   // updates the measurement option on the given index with the given event value
   const handleMeasurementOptionChange = idx => evt => {

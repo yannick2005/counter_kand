@@ -4,6 +4,7 @@ import {
   Typography,
   Grid
 } from '@material-ui/core';
+import { useParams, useLocation } from 'react-router-dom';
 
 import ActionItems from '../components/actionItems';
 import ErrorSnackbar from '../components/errorSnackbar';
@@ -30,27 +31,30 @@ const styles = theme => ({
 function UseCaseMeasurement(props) {
   const { classes } = props;
 
-  const [useCaseId, setUseCaseId] = useState(props.match.params.id);
+  // use case
+  const [useCaseId, setUseCaseId] = useState("");
   const [useCaseDetails, setUseCaseDetails] = useState('');
   const [measurementsCount, setMeasurementsCount] = useState(0);
   const [lastMeasurementId, setLastMeasurementId] = useState("");
-
   const [pinCode, setPinCode] = useState(null);
-  const [displayText, setDisplayText] = useState(true);
 
+  // general
+  const [displayText, setDisplayText] = useState(true);
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [connectivityIssue, setConnectivityIssue] = useState(false);
 
+  const { id } = useParams();
+  const location = useLocation();
 
   useEffect(() => {
-    const useCaseId = props.match.params.id;
+    const useCaseId = id;
     let body = {
       pinCode: pinCode
     }
 
-    body.pinCode = new URLSearchParams(props.location.search).get("pinCode")
+    body.pinCode = new URLSearchParams(location).get("pinCode")
     if (!body.pinCode) {
       body.pinCode = prompt("Please provide the secure pincode of this use case to access the measurement area")
     }
@@ -58,19 +62,22 @@ function UseCaseMeasurement(props) {
     setPinCode(body.pinCode)
 
     // check if correct pin has been provided
-    fetch('post', '/useCases/' + useCaseId + '/authorize', body)
+    custom_fetch('post', '/useCases/' + useCaseId + '/authorize', body)
       .then(response => {
         // if succesfully set useCase ID and load cases, otherwise show error
         setUseCaseId(useCaseId);
-        getUseCase()
       })
       .catch(error => {
         setError({ message: "Wrong pinCode provide there for no access granted" })
       })
   }, []);
 
+  useEffect(() => {
+    getUseCase()
+  }, [useCaseId]);
 
-  const fetch = async (method, endpoint, body, surpressError) => {
+
+  const custom_fetch = async (method, endpoint, body, surpressError) => {
     setLoading(true);
 
     try {
@@ -109,7 +116,7 @@ function UseCaseMeasurement(props) {
     let error = null
 
     try {
-      return await fetch(method, endpoint, body, true)
+      return await custom_fetch(method, endpoint, body, true)
     }
     catch (err) {
       error = err
@@ -137,20 +144,21 @@ function UseCaseMeasurement(props) {
   }
 
   const getMeasurementsCount = async () => {
-    let measurementsCount = await fetch('get', '/useCases/' + useCaseId + '/measurements/count')
+    let measurementsCount = []
+    if (useCaseId) measurementsCount = await custom_fetch('get', '/useCases/' + useCaseId + '/measurements/count')
 
     setMeasurementsCount(measurementsCount)
   }
 
   const getUseCase = async () => {
-    setUseCaseDetails((await fetch('get', '/useCases/' + useCaseId)) || [])
+    setUseCaseDetails((await custom_fetch('get', '/useCases/' + useCaseId)) || [])
     getMeasurementsCount()
   }
 
   const deleteLastMeasurement = async () => {
     //only allowed to delete the last measurement by themselves
     if (lastMeasurementId) {
-      await fetch("DELETE", "/measurements/" + lastMeasurementId)
+      await custom_fetch("DELETE", "/measurements/" + lastMeasurementId)
 
       getMeasurementsCount()
       setLastMeasurementId("")
@@ -217,7 +225,7 @@ function UseCaseMeasurement(props) {
         useCaseId={useCaseId}
       />
 
-      {useCaseDetails !== "" ? (
+      {useCaseDetails && useCaseDetails.measurementOptions && useCaseDetails.measurementOptions.length > 0 ? (
         // measurements present
 
         useCaseDetails.measurementOptions.map(function (groupElement, groupIndex, groupArray) {
@@ -227,15 +235,16 @@ function UseCaseMeasurement(props) {
             // iteration for buttons
 
             return (
-              <Grid item xs>
+              <Grid item xs key={opionIndex}>
                 <MeasurementButtons
                   onClick={saveMeasurement}
                   key={`${opionIndex}-${optionElement.name}`}
                   groupName={groupElement.name}
-                  buttonValue={optionElement}
+                  buttonValue={optionElement.value}
                   length={optionsArray.length}
                   groupLength={groupArray.length}
                   displayText={displayText}
+                  icon={optionElement.icon}
                 />
               </Grid>
             )

@@ -3,6 +3,7 @@ import {
   withStyles,
   Typography,
 } from '@material-ui/core';
+import { useParams } from 'react-router-dom';
 
 // icons for material table
 import AddBox from '@material-ui/icons/AddBox';
@@ -47,25 +48,34 @@ const tableIcons = {
   ThirdStateCheck: forwardRef((props, ref) => <Remove {...props} ref={ref} />),
   ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />)
 };
+
 const styles = theme => ({
 });
 
-function MeasurementView(props) {
-  const title = "List measurements for " + useCase.name                              // define title of website
-  const exportFileName = "list_measurements_" + useCase.name + "_" + getDateTime()        // define export file name
+const getDateTime = () => {
+  const today = new Date();
+  const date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
+  const time = today.getHours() + "-" + today.getMinutes() + "-" + today.getSeconds();
 
+  return date + '_' + time;
+}
+
+function MeasurementView(props) {
+  const { id } = useParams();
   const [useCase, setUseCase] = useState("");
   const [measurements, setMeasurements] = useState([]);
   const [tableOutput, setTableOutput] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const title = "List measurements for " + useCase.name                              // define title of website
+  const exportFileName = "list_measurements_" + useCase.name + "_" + getDateTime()        // define export file name
 
   useEffect(() => {
     getMeasurements();
-  }, []);
+  }, [id]);
 
-  const fetch = async (method, endpoint, body) => {
+  const custom_fetch = async (method, endpoint, body) => {
     setLoading(true);
 
     try {
@@ -97,10 +107,10 @@ function MeasurementView(props) {
   }
 
   const getMeasurements = async () => {
-    const useCaseId = props.match.params.id
+    const useCaseId = id
 
     // get use case and corresponding measurements
-    let useCase = (await fetch('get', '/usecases/' + useCaseId + "/measurements")) || []
+    let useCase = (await custom_fetch('get', '/usecases/' + useCaseId + "/measurements")) || []
     let measurements = useCase.Measurements
     let tableOutput = []
 
@@ -120,23 +130,15 @@ function MeasurementView(props) {
     }
   }
 
-  const getDateTime = () => {
-    const today = new Date();
-    const date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
-    const time = today.getHours() + "-" + today.getMinutes() + "-" + today.getSeconds();
-
-    return date + '_' + time;
-  }
-
   return (
     <Fragment>
-      {measurements.length > 0 ? (
+      {measurements && measurements.length > 0 ? (
         // data available, present table
         <MaterialTable
           icons={tableIcons}
           title={title}
           columns={[
-            { title: 'Use case', field: 'useCase' },
+            { title: 'Use case', field: 'useCase', },
             { title: 'Measurement group', field: 'groupName' },
             { title: 'Measurement value', field: 'value' },
             { title: 'Timestamp', field: 'timestamp' }
@@ -148,8 +150,8 @@ function MeasurementView(props) {
             exportAllData: true,
             filtering: true,
             search: false,
-            pageSize: 20,
-            pageSizeOptions: [20, 50, 100, 1000]
+            pageSize: 5,
+            pageSizeOptions: [5, 10, 20, 50],
           }}
         />
       ) : (

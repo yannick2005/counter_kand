@@ -211,8 +211,6 @@ function UseCaseMeasurement(props) {
     }
   }
 
-  console.log(useCaseDetails)
-
   return (
     <Fragment>
       <Typography className={classes.title} variant="h6">Measurements {useCaseDetails.name} </Typography>

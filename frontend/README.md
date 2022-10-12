@@ -15,15 +15,12 @@ REACT_APP_NAME=$npm_package_name
 These variables need to be injected when creating a production build
 
 ```
-# Key for Google Captcha v3 (optional)
-REACT_APP_CAPTCHA_SITE_KEY=key
-
 REACT_APP_BACKEND_URL=http://localhost:8080
 ```
 
-## Run the app 
+## Run the app
 
-### Run the development environment 
+### Run the development environment
 
 `npm run dev`
 
@@ -33,7 +30,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the frontend in the 
 
 The page will reload if you make edits. You will also see any lint errors in the console.
 
-### Run the production environment 
+### Run the production environment
 
 `npm start`
 

@@ -17,8 +17,6 @@ import FileCopyIcon from '@material-ui/icons/FileCopy';
 import moment from 'moment';
 import { orderBy, filter } from 'lodash';
 
-import ReCAPTCHA from "react-google-recaptcha";
-import { captcha_site_key } from '../components/config';
 import UseCaseEditor from '../components/useCaseEditor';
 import ErrorSnackbar from '../components/errorSnackbar';
 import LoadingBar from '../components/loadingBar'
@@ -50,13 +48,6 @@ const styles = theme => ({
 
 function UseCaseManager(props) {
   const { classes } = props;
-
-  // captcha
-  const [captureValue, setCaptureValue] = useState(localStorage.getItem("captureValue") || "[empty]");
-  const [captureLoad, setCaptureLoad] = useState(JSON.parse(localStorage.getItem("captureLoad")) || false);
-  const [captureExpired, setCaptureExpired] = useState(JSON.parse(localStorage.getItem("captureExpired")) || true);
-  const _reCaptchaRef = React.createRef();
-
   // use case
   const [query, setQuery] = useState("");
   const [useCases, setUseCases] = useState([]);
@@ -73,12 +64,6 @@ function UseCaseManager(props) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // if captcha is empty execute the captcha query, prompt users some random pictures
-    if (_reCaptchaRef.current &&
-      (captureExpired === null || captureExpired === false)) {
-      _reCaptchaRef.current.execute()
-    }
-
     getUseCases();
   }, []);
 
@@ -165,23 +150,6 @@ function UseCaseManager(props) {
     }
   }
 
-  const handleCaptchaChange = value => {
-    // if value is null recaptcha expired
-    if (value === null) {
-      setCaptureValue("[empty]");
-      setCaptureLoad(true)
-      setCaptureExpired(true)
-    } else {
-      setCaptureValue(value);
-      setCaptureLoad(true)
-      setCaptureExpired(false)
-
-      localStorage.setItem("captureValue", value)
-      localStorage.setItem("captureLoad", true)
-      localStorage.setItem("captureExpired", false)
-    }
-  };
-
   const handleSearchChange = evt => {
     setQuery(evt.target.value);
   };
@@ -195,16 +163,6 @@ function UseCaseManager(props) {
   return (
     <Fragment>
       <Typography variant="h4">Use Cases</Typography>
-      { /* captcha section */}
-      {(captureExpired === null || captureExpired === true) && (captcha_site_key) &&
-        <ReCAPTCHA
-          ref={_reCaptchaRef}
-          sitekey={captcha_site_key}
-          size="invisible"
-          onChange={handleCaptchaChange}
-        />
-      }
-
       { /* use case area */}
       {useCases && useCases.length > 0 ? (
         // usecases available

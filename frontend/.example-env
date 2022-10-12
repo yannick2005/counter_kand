@@ -6,9 +6,6 @@
 PORT=3100
 GENERATE_SOURCEMAP=false #https://stackoverflow.com/questions/36051891/esri-failed-to-parse-source-map
 
-# Key for Google Captcha v3
-REACT_APP_CAPTCHA_SITE_KEY=key
-
 REACT_APP_BACKEND_URL=http://localhost:8080
 
 # Further details regarding the build app

@@ -27,6 +27,7 @@
     "start": "node src/index.js",
     "build": "",
     "test": "jest",
+    "db_create": "sequelize db:create",
     "migrate": "npx sequelize-cli db:migrate",
     "seed": "npx sequelize-cli db:seed:all"
   },

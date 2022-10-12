@@ -1,7 +1,7 @@
 version: '3.9'
 
 services:
-  frontend: 
+  frontend:
     build:
       context: frontend
     image: counter_frontend
@@ -9,10 +9,9 @@ services:
       - 3100:3100
       - 3000:3000
     environment:
-      REACT_APP_CAPTCHA_SITE_KEY: ${CAPTCHA_SITE_KEY}
       REACT_APP_BACKEND_URL: ${BACKEND_URL:-http://localhost:8080}
 
-  backend: 
+  backend:
     image: diegosteinerzli/counter_kand_backend
     build:
       context: backend
@@ -30,6 +29,8 @@ services:
 
   db:
     image: postgres:14
+    ports:
+      - 5432:5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
@@ -42,3 +43,5 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: root
+    depends_on:
+      - db

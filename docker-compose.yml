@@ -12,7 +12,6 @@ services:
       REACT_APP_BACKEND_URL: ${BACKEND_URL:-http://localhost:8080}
 
   backend:
-    image: diegosteinerzli/counter_kand_backend
     build:
       context: backend
     ports:

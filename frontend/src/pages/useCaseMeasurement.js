@@ -11,7 +11,7 @@ import ErrorSnackbar from '../components/errorSnackbar';
 import MeasurementButtons from '../components/measurementButton';
 import InfoSnackbar from '..//components/infoSnackbar'
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = window.env.BACKEND_URL;
 const REXECUTION_TIMEOUT = 5000   // rexecution timeout for retry of the failed fetch calls
 const styles = theme => ({
   root: {

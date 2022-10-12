@@ -9,7 +9,7 @@ services:
       - 3100:3100
       - 3000:3000
     environment:
-      REACT_APP_BACKEND_URL: ${BACKEND_URL:-http://localhost:8080}
+      BACKEND_URL: ${BACKEND_URL:-http://localhost:8080}
 
   backend:
     build:

@@ -26,7 +26,7 @@ import MaterialTable from 'material-table'
 import ErrorSnackbar from '../components/errorSnackbar';
 import LoadingBar from '../components/loadingBar'
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = window.env.BACKEND_URL;
 
 // definition used for material table
 const tableIcons = {

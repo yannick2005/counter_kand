@@ -5,8 +5,7 @@ FROM node:16.15.1-alpine
 ############################################
 WORKDIR /srv/app
 EXPOSE 3000
-# Based on issue: https://github.com/nodejs/docker-node/issues/1734
-CMD [ "npx", "serve", "-s", "build", "-l", "3000"]
+CMD ["npm", "run", "start"]
 ENTRYPOINT [ "./entrypoint.sh" ]
 
 ############################################
@@ -30,3 +29,8 @@ COPY --chown=node:node [ "src", "src"]
 RUN npm install
 RUN npm run build
 RUN dos2unix entrypoint.sh
+
+USER root
+RUN chgrp -R 0 /srv/app && \
+    chmod -R g=u /srv/app
+USER node

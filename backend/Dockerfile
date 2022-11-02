@@ -17,12 +17,11 @@ RUN apk update && apk add --no-cache dos2unix
 # None root user
 ############################################
 RUN chown -R node:node /srv/app
-RUN chmod -R 755 /srv/app
 USER node
-COPY [ "package.json", "package-lock.json",  "./"]
-COPY [ "config", "config"]
-COPY [ "src", "src"]
-COPY [ "entrypoints", "entrypoints"]
+COPY --chown=node:node  [ "package.json", "package-lock.json",  "./"]
+COPY --chown=node:node  [ "config", "config"]
+COPY --chown=node:node  [ "src", "src"]
+COPY --chown=node:node  [ "entrypoints", "entrypoints"]
 
 ############################################
 # Building Application
@@ -30,5 +29,7 @@ COPY [ "entrypoints", "entrypoints"]
 RUN npm install
 RUN dos2unix entrypoints/*
 
+USER root
 RUN chgrp -R 0 /srv/app && \
     chmod -R g=u /srv/app
+USER node

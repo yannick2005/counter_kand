@@ -5,7 +5,8 @@ FROM node:18.12.0-alpine3.16
 ############################################
 WORKDIR /srv/app
 EXPOSE 8080
-CMD ["tail", "-f", "/dev/null"]
+ENTRYPOINT [ "entrypoints/production.sh" ]
+CMD [ "npm", "start" ]
 
 ############################################
 # System Dependencies

@@ -1,17 +1,37 @@
 FROM node:18.3.0-alpine3.14
 
+############################################
+# General Docker image configuration
+############################################
 ARG UID=1001
 WORKDIR /srv/app
 EXPOSE 3000
 CMD [ "npm", "start" ]
 ENTRYPOINT [ "./entrypoint.sh" ]
-RUN apk add --no-cache gettext
+
+############################################
+# System Dependencies
+############################################
+RUN apk add --no-cache gettext dos2unix
 RUN adduser --disabled-password --uid "$UID" app
 
+############################################
+# None root user
+############################################
 COPY [ "package.json", "package-lock.json",  "./"]
-RUN npm install
-
 COPY [ "./entrypoint.sh", "./entrypoint.sh"]
 COPY [ "public", "public"]
 COPY [ "src", "src"]
+
+RUN chmod +x ./entrypoint.sh
+RUN chown -R app:app /srv/app
+RUN chmod -R 755 /srv/app
+USER app
+
+############################################
+# Building Application
+############################################
+RUN npm install
 RUN npm run build
+
+RUN dos2unix entrypoint.sh

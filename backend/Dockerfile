@@ -16,9 +16,9 @@ RUN apk update && apk add --no-cache dos2unix
 ############################################
 # None root user
 ############################################
-USER node
 RUN chown -R node:node /srv/app
 RUN chmod -R 755 /srv/app
+USER node
 COPY [ "package.json", "package-lock.json",  "./"]
 COPY [ "config", "config"]
 COPY [ "src", "src"]

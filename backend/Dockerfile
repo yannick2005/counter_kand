@@ -1,12 +1,11 @@
-FROM node:18.3.0-alpine3.14
+FROM node:18.12.0-alpine3.16
 
 ############################################
 # General Docker image configuration
 ############################################
 WORKDIR /srv/app
 EXPOSE 8080
-CMD ["npm", "run", "start"]
-ENTRYPOINT [ "entrypoints/production.sh" ]
+CMD ["tail", "-f", "/dev/null"]
 
 ############################################
 # System Dependencies
@@ -16,12 +15,12 @@ RUN apk update && apk add --no-cache dos2unix
 ############################################
 # None root user
 ############################################
+COPY [ "package.json", "package-lock.json",  "./"]
+COPY [ "config", "config"]
+COPY [ "src", "src"]
+COPY [ "entrypoints", "entrypoints"]
 RUN chown -R node:node /srv/app
 USER node
-COPY --chown=node:node  [ "package.json", "package-lock.json",  "./"]
-COPY --chown=node:node  [ "config", "config"]
-COPY --chown=node:node  [ "src", "src"]
-COPY --chown=node:node  [ "entrypoints", "entrypoints"]
 
 ############################################
 # Building Application

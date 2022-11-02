@@ -1,6 +1,8 @@
 #!/bin/sh
 set -e
 
+umask 0002
+
 echo "WAITING FOR DATABASE DB_HOST = $DB_HOST"
 ./entrypoints/wait-for.sh $DB_HOST:5432
 

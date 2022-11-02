@@ -3,7 +3,6 @@ FROM node:18.3.0-alpine3.14
 ############################################
 # General Docker image configuration
 ############################################
-ARG UID=1001
 WORKDIR /srv/app
 EXPOSE 3000
 CMD [ "npm", "start" ]
@@ -13,7 +12,7 @@ ENTRYPOINT [ "./entrypoint.sh" ]
 # System Dependencies
 ############################################
 RUN apk add --no-cache gettext dos2unix
-RUN adduser --disabled-password --uid "$UID" app
+RUN adduser -D app
 
 ############################################
 # None root user

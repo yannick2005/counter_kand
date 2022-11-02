@@ -5,13 +5,14 @@ FROM node:16.15.1-alpine
 ############################################
 WORKDIR /srv/app
 EXPOSE 3000
-CMD [ "npm", "start" ]
+# Based on issue: https://github.com/nodejs/docker-node/issues/1734
+CMD [ "npx", "serve", "-s", "build", "-l", "3000"]
 ENTRYPOINT [ "./entrypoint.sh" ]
 
 ############################################
 # System Dependencies
 ############################################
-RUN apk add --no-cache gettext dos2unix vim
+RUN apk update && apk add --no-cache gettext dos2unix
 
 ############################################
 # None root user
@@ -28,5 +29,4 @@ COPY --chown=node:node [ "src", "src"]
 ############################################
 RUN npm install
 RUN npm run build
-
 RUN dos2unix entrypoint.sh

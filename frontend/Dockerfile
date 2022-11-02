@@ -5,8 +5,9 @@ FROM node:18.3.0-alpine3.14
 ############################################
 WORKDIR /srv/app
 EXPOSE 3000
-CMD [ "npm", "start" ]
-ENTRYPOINT [ "./entrypoint.sh" ]
+#CMD [ "npm", "start" ]
+#ENTRYPOINT [ "./entrypoint.sh" ]
+CMD ["tail", "-f", "/dev/null"]
 
 ############################################
 # System Dependencies
@@ -35,4 +36,5 @@ RUN dos2unix entrypoint.sh
 
 
 RUN chgrp -R 0 /srv/app && \
-    chmod -R g=u /srv/app
+    chmod -R g=u /srv/app 
+RUN chmod +x entrypoint.sh

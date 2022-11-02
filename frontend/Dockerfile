@@ -5,13 +5,14 @@ FROM node:18.3.0-alpine3.14
 ############################################
 WORKDIR /srv/app
 EXPOSE 3000
-CMD [ "npm", "start" ]
-ENTRYPOINT [ "./entrypoint.sh" ]
+#CMD [ "npm", "start" ]
+#ENTRYPOINT [ "./entrypoint.sh" ]
+CMD [ "tail", "-f", "/dev/null"]
 
 ############################################
 # System Dependencies
 ############################################
-RUN apk add --no-cache gettext dos2unix
+RUN apk add --no-cache gettext dos2unix vim
 RUN adduser -D app
 
 ############################################

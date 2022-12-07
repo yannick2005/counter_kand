@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: counter-database
+  labels: 
+    app: counter-database
+spec: 
+  type: NodePort
+  ports: 
+    - name: 5432-tcp
+      port: 5432
+      protocol: TCP
+      targetPort: 5432
+  selector: 
+    app: counter-database

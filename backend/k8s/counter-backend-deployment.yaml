@@ -1,0 +1,47 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: counter-backend
+  labels:
+    app: counter-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: counter-backend
+  template:
+    metadata:
+      labels:
+        app: counter-backend
+    spec:
+      containers:
+        - name: counter-backend
+          image: ghcr.io/yannick2005/counter-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: counter-database
+                  key: database-user
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: counter-database
+                  key: database-password
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: counter-database 
+                  key: database-name
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: counter-database 
+                  key: database-name
+            - name: npm_config_cache
+              value: ./.npm-cache
+            - name: NODE_ENV
+              value: production

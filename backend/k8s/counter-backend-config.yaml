@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata: 
+  name: postgres-config
+  labels:
+    app: counter-backend
+data: 
+  POSTGRES_DB: counter-backend

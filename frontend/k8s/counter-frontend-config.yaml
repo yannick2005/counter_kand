@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata: 
+  name: counter-config
+  labels:
+    app: counter-frontend
+data: 
+  BACKEND_URL: https://counter-backend-zlic-yschonhaar1.apps.exoscale-ch-gva-2-0.appuio.cloud
